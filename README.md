@@ -6,6 +6,8 @@ Paper attachment TBD.
 
 Reduces set of cases to consider down to 21 and introduces a new partition that speeds up the computation of the shortest path.
 
+Requires SFML & OMPL. It has a demo in main.cpp that computes and draws paths between randomly generated start/end configurations. 
+
 ## Benchmarking Results
 
 This table presents sample benchmarking results of our proposed planner against OMPL's implementation of the original Reeds-Shepp algorithm and against our implementation of [Desaulniers1995].
@@ -25,7 +27,11 @@ Table: Benchmarking results of our proposed planner against OMPL's implementatio
 3D partition of regions in the configuration space. Each color refers to a unique region (out of 21) where one identified path type is certainly the shortest. 1 million configurations $p_{f}$ spanning $\big[ [-100,100,], [-100,100], [-\pi,\pi)\big]$ for $p_{0} = (0,0,0)$ and $r = 20$. Red axis = $x$ axis, blue axis = $y$ axis, yellow axis = $\theta$ axis. <br>
 ![alt text](https://github.com/IbrahimSquared/accelerated-RS-planner/blob/master/samples/3D_cases_cropped.png) <br>
 
-## How to Use
+## How to Use (to be completed)
+Set compiler path if needed, make sure SFML and OMPL libraries are installed, then: <br>
+``` mkdir build && cd build ``` <br>
+``` cmake .. ``` <br>
+``` make ```
 
 To use this project, follow these simple steps:
 
