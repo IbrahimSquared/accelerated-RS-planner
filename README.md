@@ -14,8 +14,8 @@ This table presents sample benchmarking results of our proposed planner against 
 
 Table: Benchmarking results of our proposed planner against OMPL's implementation of the original Reeds-Shepp algorithm and against our implementation of [Desaulniers1995].
 
-[Desaulniers1995]: #https://ieeexplore.ieee.org/document/478429
-[OMPL]: #https://ompl.kavrakilab.org/ReedsSheppStateSpace_8cpp_source.html
+[Desaulniers1995]: https://ieeexplore.ieee.org/document/478429
+[OMPL]: https://ompl.kavrakilab.org/ReedsSheppStateSpace_8cpp_source.html
 
 ## How to Use
 
