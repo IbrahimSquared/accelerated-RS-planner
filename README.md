@@ -8,6 +8,8 @@ Reduces set of cases to consider down to 21 and introduces a new partition that 
 
 Requires SFML & OMPL. It has a demo in main.cpp that computes and draws paths between randomly generated start/end configurations. 
 
+Also contains an implemntation of "An efficient algorithm to find a shortest path for a car-like robot". 
+
 ## Benchmarking Results
 
 This table presents sample benchmarking results of our proposed planner against OMPL's implementation of the original Reeds-Shepp algorithm and against our implementation of [Desaulniers1995].
