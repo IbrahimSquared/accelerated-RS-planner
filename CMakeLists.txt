@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 
-project(accelerateRSPlanner)
+project(acceleratedRSPlanner)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -17,9 +17,9 @@ endif()
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR})
 
 include_directories(include)
-add_executable(accelerateRSPlanner src/main.cpp src/ConfigParser.cpp src/HelperFunctions.cpp src/Solver.cpp src/DesaulniersAlgorithm.cpp src/Plotter.cpp)
+add_executable(acceleratedRSPlanner src/main.cpp src/ConfigParser.cpp src/HelperFunctions.cpp src/Solver.cpp src/DesaulniersAlgorithm.cpp src/Plotter.cpp)
 
 find_package(ompl)
-target_link_libraries(accelerateRSPlanner PRIVATE ompl)
+target_link_libraries(acceleratedRSPlanner PRIVATE ompl)
 find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
-target_link_libraries(accelerateRSPlanner PRIVATE sfml-graphics)
+target_link_libraries(acceleratedRSPlanner PRIVATE sfml-graphics)
