@@ -14,7 +14,7 @@ Also contains an implemntation of "An efficient algorithm to find a shortest pat
 
 This table presents sample benchmarking results of our proposed planner against OMPL's implementation of the original Reeds-Shepp algorithm and against our implementation of [Desaulniers1995].
 
-Performed on Idle Linux Intel i9-13980HX.
+Performed on idle Linux Intel i9-13980HX.
 
 | Method                        | Average Time per State (µs) | Time Ratio to OMPL | Maximum Path Length Error | Average Path Length Error |
 |-------------------------------|-----------------------------------------------|--------------------|---------------------------|---------------------------|
