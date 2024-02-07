@@ -169,4 +169,30 @@ void HelperFunctions::errorStats(
   std::cout << "-----------------" << std::endl;
 }
 
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+void HelperFunctions::errorStats(
+    const std::vector<double> &distances_acceleratedRS,
+    const std::vector<double> &distances_OMPL) const {
+
+  double avg_error_accelerated = 0.0;
+  double max_error_accelerated = 0.0;
+  for (int i = 0; i < distances_OMPL.size(); i++) {
+    double error_accelerated =
+        std::abs(distances_acceleratedRS[i] - distances_OMPL[i]);
+    avg_error_accelerated += error_accelerated;
+    max_error_accelerated = std::max(max_error_accelerated, error_accelerated);
+  }
+  avg_error_accelerated /= distances_OMPL.size();
+  std::cout << "\n------------------" << std::endl;
+  std::cout << "Error stats: " << std::endl;
+  std::cout << "Average error acceleratedRS (Proposed): "
+            << avg_error_accelerated << std::endl;
+  std::cout << "******************" << std::endl;
+  std::cout << "Maximum error acceleratedRS (Proposed): "
+            << max_error_accelerated << std::endl;
+  std::cout << "-----------------" << std::endl;
+}
+
 } // namespace accelerated
