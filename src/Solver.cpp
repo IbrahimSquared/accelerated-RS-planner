@@ -1499,7 +1499,7 @@ void Solver::characterizeVariability() {
     for (int j = 0; j < stateCategory[i].size(); ++j) {
       to.x = stateCategory[i][j].x;
       to.y = stateCategory[i][j].y;
-      to.theta = stateCategory[i][j].theta - pi / 2;
+      to.theta = stateCategory[i][j].theta;
       acceleratedRSPlanner(from, to, d_accelerated, r, condition, Q);
       distances_acceleratedRS[j] = d_accelerated;
     }
@@ -1512,7 +1512,7 @@ void Solver::characterizeVariability() {
     for (int j = 0; j < stateCategory[i].size(); ++j) {
       toOMPL[0] = stateCategory[i][j].x;
       toOMPL[1] = stateCategory[i][j].y;
-      toOMPL[2] = stateCategory[i][j].theta - pi / 2;
+      toOMPL[2] = stateCategory[i][j].theta;
       d_OMPL = space->distance(fromOMPL(), toOMPL());
       distances_OMPL[j] = d_OMPL;
     }
