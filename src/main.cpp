@@ -12,9 +12,10 @@ int main() {
   config_parser.printConfig();
 
   accelerated::Solver solver;
-  solver.RandomPathsValidityChecks();
+  // solver.RandomPathsValidityChecks();
   // solver.drawRandomPath();
   // solver.benchmarkPlanners();
+  solver.characterizeVariability();
 
   return 0;
 }

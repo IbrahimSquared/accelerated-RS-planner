@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <chrono>
 #include <complex>
+#include <fstream>
 #include <numbers>
 #include <ompl/base/ScopedState.h>
 #include <ompl/base/spaces/ReedsSheppStateSpace.h>
@@ -1444,6 +1445,100 @@ void Solver::getErrors(const std::vector<State> &path, const State &to,
   errors.y = fabs(y - to.y);
   t = wrapToPi(t);
   errors.theta = fabs(t - to.theta);
+}
+
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+void Solver::characterizeVariability() {
+  const int number_of_final_states = 100000000;
+  std::vector<State> toStates;
+  toStates.reserve(number_of_final_states);
+  const bool use_config = true;
+  helper_functions_.generateRandomStates(toStates, use_config);
+
+  std::vector<std::vector<State>> stateCategory(21);
+  const State from = {0, 0, 0};
+
+  const double r = 400;
+  // Catergorize the final states into 21 categories
+  double d_accelerated = 0;
+  State to;
+  int Q, condition;
+  for (int i = 0; i < number_of_final_states; ++i) {
+    to.x = toStates[i].x;
+    to.y = toStates[i].y;
+    to.theta = toStates[i].theta - pi / 2;
+    acceleratedRSPlanner(from, to, d_accelerated, r, condition, Q);
+    stateCategory[condition - 1].push_back(toStates[i]);
+  }
+
+  // Display number of states in each category
+  for (int i = 0; i < 21; ++i) {
+    std::cout << "Category " << i + 1 << " has " << stateCategory[i].size()
+              << " states" << std::endl;
+  }
+
+  // For each category, compute the time by proposed and OMPL then compare
+  std::vector<double> distances_acceleratedRS(number_of_final_states);
+  std::vector<double> distances_OMPL(number_of_final_states);
+
+  std::vector<double> time_accelerated(21);
+
+  ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(r, false));
+  ob::ScopedState<> fromOMPL(space), toOMPL(space);
+  fromOMPL[0] = from.x;
+  fromOMPL[1] = from.y;
+  fromOMPL[2] = from.theta;
+  double d_OMPL = 0;
+
+  std::vector<double> time_OMPL(21);
+  for (int i = 0; i < 21; ++i) {
+
+    auto start_accelerated = std::chrono::high_resolution_clock::now();
+    for (int j = 0; j < stateCategory[i].size(); ++j) {
+      to.x = stateCategory[i][j].x;
+      to.y = stateCategory[i][j].y;
+      to.theta = stateCategory[i][j].theta - pi / 2;
+      acceleratedRSPlanner(from, to, d_accelerated, r, condition, Q);
+      distances_acceleratedRS[j] = d_accelerated;
+    }
+    auto end_accelerated = std::chrono::high_resolution_clock::now();
+    auto duration_accelerated =
+        durationInMicroseconds(start_accelerated, end_accelerated);
+    time_accelerated[i] = duration_accelerated;
+
+    auto start_OMPL = std::chrono::high_resolution_clock::now();
+    for (int j = 0; j < stateCategory[i].size(); ++j) {
+      toOMPL[0] = stateCategory[i][j].x;
+      toOMPL[1] = stateCategory[i][j].y;
+      toOMPL[2] = stateCategory[i][j].theta - pi / 2;
+      d_OMPL = space->distance(fromOMPL(), toOMPL());
+      distances_OMPL[j] = d_OMPL;
+    }
+    auto end_OMPL = std::chrono::high_resolution_clock::now();
+    auto duration_OMPL = durationInMicroseconds(start_OMPL, end_OMPL);
+    time_OMPL[i] = duration_OMPL;
+
+    // display error stats for each category
+    // std::cout << "Distance error for category " << i + 1 << std::endl;
+    // helper_functions_.errorStats(distances_acceleratedRS, distances_OMPL);
+  }
+
+  // Display the time speedup for each category
+  for (int i = 0; i < 21; ++i) {
+    std::cout << "Category " << i + 1 << " has a time speedup of "
+              << time_OMPL[i] / time_accelerated[i] << std::endl;
+  }
+
+  // Save the number of states in each category, the time for each category for
+  // each method and the speedup
+  std::ofstream file;
+  file.open("variability.txt");
+  for (int i = 0; i < 21; ++i) {
+    file << stateCategory[i].size() << " " << time_accelerated[i] << " "
+         << time_OMPL[i] << " " << time_OMPL[i] / time_accelerated[i] << "\n";
+  }
 }
 
 } // namespace accelerated

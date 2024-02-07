@@ -27,6 +27,8 @@ public:
   void RandomPathsValidityChecks();
   // Press enter to solve and draw a random path
   void drawRandomPath();
+  // Characterizes variability in speedup between types/conditions
+  void characterizeVariability();
 
 private:
   const Config &config_ = ConfigParser::getInstance().getConfig();
