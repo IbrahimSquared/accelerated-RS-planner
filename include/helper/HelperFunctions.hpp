@@ -26,6 +26,8 @@ public:
   void errorStats(const std::vector<double> &distancesAcceleratedRS,
                   const std::vector<double> &distancesOMPL,
                   const std::vector<double> &distancesDesaulniers) const;
+  void errorStats(const std::vector<double> &distancesAcceleratedRS,
+                  const std::vector<double> &distancesOMPL) const;
 
   void timeStats(const long durationAcceleratedRS, const long durationOMPL,
                  const long durationDesaulniers,
