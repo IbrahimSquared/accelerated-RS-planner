@@ -25,7 +25,7 @@ public:
   void benchmarkPlanners();
   // Simulates random start/end config and checks validity
   void RandomPathsValidityChecks();
-  // press enter to solve and draw a random path
+  // Press enter to solve and draw a random path
   void drawRandomPath();
 
 private:
@@ -34,20 +34,20 @@ private:
   const Plotter &plotter = Plotter::getInstance();
 
   /*!
-   * @brief transforms final config to local rotational frame
+   * @brief Transforms final config to local rotational frame
    * @param [in] start config
    * @param [in] final config
    * @param [in] final local config
    */
   void globalToLocal(const State &from, const State &to, State &to_local) const;
 
-  // main partitions of the algorithm
+  // Main partitions of the algorithm
   void setA(const double x, const double y, const double thetaf, const double r,
             const double beta0, int &cond, double &d);
   void setB(const double x, const double y, const double thetaf, const double r,
             const bool pred_1, const bool pred_2, int &cond, double &d);
 
-  // forward simulate the path & check if it reaches the final config
+  // Forward simulate the path & check if it reaches the final config
   void validityCheck(const State &from, const State &to, const int cond,
                      const int Q, State &errors);
 
@@ -58,7 +58,7 @@ private:
   void getErrors(const std::vector<State> &path, const State &to,
                  State &errors) const;
 
-  // proposed method
+  // Proposed method
   void acceleratedRSPlanner(const State &from, const State &to, double &d,
                             const double r, int &cond, int &Q);
 
@@ -78,7 +78,7 @@ private:
   }
 
   /*!
-   * @brief compute paths.
+   * @brief Compute paths.
    */
   inline void T3(const double x, const double y, const double thetaf,
                  double &d);
@@ -120,7 +120,7 @@ private:
   inline void T21(const double x, const double y, const double thetaf,
                   double &d);
   /*!
-   * @brief compute angles.
+   * @brief Compute angles.
    */
   inline void Beta1(const double x, const double y, const double thetaf,
                     double &t, double &u) const;
