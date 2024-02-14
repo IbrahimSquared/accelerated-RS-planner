@@ -1115,6 +1115,7 @@ void Solver::computeAndDrawRandomPath(sf::RenderWindow &window) {
 /*****************************************************************************/
 /*****************************************************************************/
 void Solver::drawRandomPath() {
+  std::cout << "Press enter to generate and plot new random path" << std::endl;
   sf::RenderWindow window(sf::VideoMode(1000, 1000), "Path Visualization");
   window.setFramerateLimit(60);
   while (window.isOpen()) {
