@@ -968,7 +968,7 @@ void Solver::benchmarkPlanners() {
       durationInMicroseconds(start_accelerated, end_accelerated);
 
   // Reeds-Shepp State Space (OMPL's implementation)
-  ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(r, false));
+  ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(r));
   ob::ScopedState<> fromOMPL(space), toOMPL(space);
   fromOMPL[0] = from.x;
   fromOMPL[1] = from.y;
@@ -1046,7 +1046,7 @@ void Solver::computeAndDrawRandomPath(sf::RenderWindow &window) {
             << std::endl;
 
   // Reeds-Shepp State Space (OMPL's implementation)
-  ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(r, false));
+  ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(r));
   ob::ScopedState<> fromRSS(space), toRSS(space);
 
   double d_accelerated = 0;
@@ -1175,8 +1175,7 @@ void Solver::RandomPathsValidityChecks() {
     }
 
     // Reeds-Shepp State Space (OMPL's implementation)
-    ob::StateSpacePtr space(
-        std::make_shared<ob::ReedsSheppStateSpace>(r, false));
+    ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(r));
     ob::ScopedState<> fromRSS(space), toRSS(space);
     toRSS[0] = toStates[i].x;
     toRSS[1] = toStates[i].y;
@@ -1485,7 +1484,7 @@ void Solver::characterizeVariability() {
 
   std::vector<double> time_accelerated(21);
 
-  ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(r, false));
+  ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(r));
   ob::ScopedState<> fromOMPL(space), toOMPL(space);
   fromOMPL[0] = from.x;
   fromOMPL[1] = from.y;
