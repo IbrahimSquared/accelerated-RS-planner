@@ -13,9 +13,9 @@ int main() {
 
   accelerated::Solver solver;
   // solver.RandomPathsValidityChecks();
-  // solver.drawRandomPath();
+  solver.drawRandomPath();
   // solver.benchmarkPlanners();
-  solver.characterizeVariability();
+  // solver.characterizeVariability();
 
   return 0;
 }
