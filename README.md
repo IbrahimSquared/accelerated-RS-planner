@@ -60,7 +60,9 @@ Type           | Occurrences | Speedup
 21             | 1287291     | 5.05853
 
 ## How to Use (to be completed)
-Set compiler path if needed, make sure SFML and OMPL libraries are installed, then: <br>
+Set compiler path if needed, make sure SFML (libsfml-dev) and OMPL libraries are installed, then: <br>
+``` sudo apt install cmake ``` <br>
+``` sudo apt install g++ ``` <br>
 ``` mkdir build && cd build ``` <br>
 ``` cmake .. ``` <br>
 ``` make ```
