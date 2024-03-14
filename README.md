@@ -75,6 +75,9 @@ Similarly, create Eigen symbolic links so that required files can be found by OM
 ``` sudo ln -sf eigen3/Eigen Eigen ``` <br>
 ``` sudo ln -sf eigen3/unsupported unsupported ``` <br>
 
-To use this project, follow these simple steps:
+After making any changes to the library paths or creating symbolic links, run the ldconfig command to update the system's cache of shared libraries: <br>
+``` sudo ldconfig ``` <br>
+
+To use this project, follow these simple steps: <br>
 
 1. Clone the repository:
