@@ -67,6 +67,14 @@ Set compiler path if needed, make sure SFML (libsfml-dev) and OMPL libraries are
 ``` cmake .. ``` <br>
 ``` make ```
 
+Troubleshooting build issues with OMPL: <br>
+By default, OMPL installs in /usr/local/include/ompl-1.6/ompl. Create a symbolic link so that it can be properly located: <br>
+``` sudo ln -s /usr/local/include/ompl-1.6/ompl /usr/local/include/ompl ``` <br>
+Similarly, create Eigen symbolic links so that required files can be found by OMPL:
+``` cd /usr/include ``` <br>
+``` sudo ln -sf eigen3/Eigen Eigen ``` <br>
+``` sudo ln -sf eigen3/unsupported unsupported ``` <br>
+
 To use this project, follow these simple steps:
 
 1. Clone the repository:
