@@ -74,11 +74,10 @@ Similarly, create Eigen symbolic links so that required files can be found by OM
 ``` cd /usr/include ``` <br>
 ``` sudo ln -sf eigen3/Eigen Eigen ``` <br>
 ``` sudo ln -sf eigen3/unsupported unsupported ``` <br>
-After building, you can verify that the required libraries have been properly found using ldd, for example: <br>
-``` ldd ./acceleratedRSPlanner ``` <br>
-
 After making any changes to the library paths or creating symbolic links, run the ldconfig command to update the system's cache of shared libraries: <br>
 ``` sudo ldconfig ``` <br>
+After building, you can verify that the required libraries have been properly found using ldd, for example: <br>
+``` ldd ./acceleratedRSPlanner ``` <br>
 
 To use this project, follow these simple steps: <br>
 
