@@ -8,7 +8,7 @@ Reduces set of cases to consider down to 21 and introduces a new partition that 
 
 Requires SFML & OMPL. It has a demo in main.cpp that computes and draws paths between randomly generated start/end configurations. 
 
-Also contains an implemntation of "An efficient algorithm to find a shortest path for a car-like robot". 
+Also contains an implemntation of ["An efficient algorithm to find a shortest path for a car-like robot"]. 
 
 ## Benchmarking Results
 
@@ -26,6 +26,7 @@ Table: Benchmarking results of our proposed planner against OMPL's implementatio
 
 [Desaulniers1995]: https://ieeexplore.ieee.org/document/478429
 [OMPL]: https://ompl.kavrakilab.org/ReedsSheppStateSpace_8cpp_source.html
+["An efficient algorithm to find a shortest path for a car-like robot"]: https://ieeexplore.ieee.org/document/478429
 
 ## Sample partition in 3D
 3D partition of regions in the configuration space. Each color refers to a unique region (out of 21) where one identified path type is certainly the shortest. 1 million configurations $p_{f}$ spanning $\big[ [-100,100,], [-100,100], [-\pi,\pi)\big]$ for $p_{0} = (0,0,0)$ and $r = 20$. Red axis = $x$ axis, blue axis = $y$ axis, yellow axis = $\theta$ axis. <br>
