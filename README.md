@@ -1,6 +1,6 @@
 # Accelerated Reeds-Shepp Planning
 
-Solves the Reeds-Shepp path planning problem 11.5x faster on average than OMPL's implementation. 
+Solves the Reeds-Shepp path planning problem 11.5x faster on average than [OMPL]'s implementation. 
 
 Paper attachment TBD.
 
