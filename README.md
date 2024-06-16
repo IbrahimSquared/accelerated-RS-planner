@@ -61,7 +61,11 @@ Type           | Occurrences | Speedup
 21             | 1287291     | 5.05853
 
 ## How to Use (to be completed)
-Set compiler path if needed, make sure SFML (libsfml-dev) and OMPL libraries are installed, then: <br>
+Set compiler path if needed. Make sure SFML: <br>
+``` sudo apt install libsfml-dev ``` <br>
+and [OMPL Libraries] are installed.
+[OMPL Libraries]: https://ieeexplore.ieee.org/document/478429
+then: <br>
 ``` sudo apt install cmake ``` <br>
 ``` sudo apt install g++ ``` <br>
 ``` mkdir build && cd build ``` <br>
@@ -81,5 +85,3 @@ After building, you can verify that the required libraries have been properly fo
 ``` ldd ./acceleratedRSPlanner ``` <br>
 
 To use this project, follow these simple steps: <br>
-
-1. Clone the repository:
