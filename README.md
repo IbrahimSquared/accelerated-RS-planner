@@ -63,9 +63,9 @@ Type           | Occurrences | Speedup
 ## How to Use (to be completed)
 Set compiler path if needed. Make sure SFML: <br>
 ``` sudo apt install libsfml-dev ``` <br>
-and [OMPL Libraries] are installed.
-[OMPL Libraries]: https://ieeexplore.ieee.org/document/478429
-then: <br>
+and OMPL libraries: <br>
+https://ompl.kavrakilab.org/installation.html <br>
+are installed, then: <br>
 ``` sudo apt install cmake ``` <br>
 ``` sudo apt install g++ ``` <br>
 ``` mkdir build && cd build ``` <br>
