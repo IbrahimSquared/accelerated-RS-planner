@@ -4,6 +4,7 @@
 #include <SFML/Graphics.hpp>
 #include <chrono>
 #include <complex>
+#include <fstream>
 #include <numbers>
 #include <ompl/base/ScopedState.h>
 #include <ompl/base/spaces/ReedsSheppStateSpace.h>
@@ -1555,7 +1556,7 @@ void Solver::getErrors(const std::vector<State> &path, const State &to,
 /*****************************************************************************/
 /*****************************************************************************/
 void Solver::characterizeVariability() {
-  const int number_of_final_states = 100000;
+  const int number_of_final_states = 1000000;
   std::vector<State> toStates;
   toStates.reserve(number_of_final_states);
   const bool use_config = true;
@@ -1582,6 +1583,7 @@ void Solver::characterizeVariability() {
     std::cout << "Category " << i + 1 << " has " << stateCategory[i].size()
               << " states" << std::endl;
   }
+  std::cout << std::endl;
 
   // For each category, compute the time by proposed and OMPL then compare
   std::vector<double> distances_acceleratedRS(number_of_final_states);
@@ -1630,20 +1632,19 @@ void Solver::characterizeVariability() {
   }
 
   // Display the time speedup for each category
-  // for (int i = 0; i < 20; ++i) {
-  //   std::cout << "Category " << i + 1 << " has a time speedup of "
-  //             << time_OMPL[i] / time_accelerated[i] << std::endl;
-  // }
+  for (int i = 0; i < 20; ++i) {
+    std::cout << "Category " << i + 1 << " has a time speedup of "
+              << time_OMPL[i] / time_accelerated[i] << std::endl;
+  }
 
   // Save the number of states in each category, the time for each category for
   // each method and the speedup
-  // std::ofstream file;
-  // file.open("variability.txt");
-  // for (int i = 0; i < 20; ++i) {
-  //   file << stateCategory[i].size() << " " << time_accelerated[i] << " "
-  //        << time_OMPL[i] << " " << time_OMPL[i] / time_accelerated[i] <<
-  //        "\n";
-  // }
+  std::ofstream file;
+  file.open("variability.txt");
+  for (int i = 0; i < 20; ++i) {
+    file << stateCategory[i].size() << " " << time_accelerated[i] << " "
+         << time_OMPL[i] << " " << time_OMPL[i] / time_accelerated[i] << "\n";
+  }
 }
 
 } // namespace accelerated
