@@ -18,9 +18,9 @@ Performed on idle Linux Intel i9-13980HX.
 
 | Method                        | Average Time per State (µs) | Time Ratio to OMPL | Maximum Path Length Error | Average Path Length Error |
 |-------------------------------|-----------------------------------------------|--------------------|---------------------------|---------------------------|
-| Proposed                      | 0.106                                         | 11.7               | 1.7e-14             | 3.31e-16            |
-| [Desaulniers1995]             | 0.298                                         | 4.16               | 1.76e-14            | 2.76e-16            |
-| [OMPL]                        | 1.241                                         | 1                  | -                         | -                         |
+| Proposed                      | 0.0827                                        | 15.12              | 9.82e-15                  | 3.28e-16                  |
+| [Desaulniers1995]             | 0.216                                         | 5.79               | 5.82e-15                  | 2.77e-16                  |
+| [OMPL]                        | 1.25                                          | 1                  | -                         | -                         |
 
 Table: Benchmarking results of our proposed planner against OMPL's implementation of the original Reeds-Shepp algorithm and against our implementation of [Desaulniers1995].
 
