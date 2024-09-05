@@ -13,8 +13,9 @@ namespace accelerated {
 /*****************************************************************************/
 /*****************************************************************************/
 void HelperFunctions::generateRandomStates(std::vector<State> &states,
-                                           const bool use_config) const {
-  double min_x, max_x, min_y, max_y, min_thetaf, max_thetaf, r;
+                                           const bool use_config,
+                                           double r) const {
+  double min_x, max_x, min_y, max_y, min_thetaf, max_thetaf;
   const int number_of_final_states = states.capacity();
   if (use_config) {
     min_x = config_.min_x;
@@ -31,7 +32,6 @@ void HelperFunctions::generateRandomStates(std::vector<State> &states,
     max_y = 5.0;
     min_thetaf = -pi;
     max_thetaf = pi;
-    r = 1;
   }
 
   if (use_config) {

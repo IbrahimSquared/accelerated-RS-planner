@@ -21,8 +21,8 @@ class HelperFunctions {
 public:
   static HelperFunctions &getInstance();
 
-  void generateRandomStates(std::vector<State> &states,
-                            const bool use_config) const;
+  void generateRandomStates(std::vector<State> &states, const bool use_config,
+                            double r = 1.0) const;
   void errorStats(const std::vector<double> &distancesAcceleratedRS,
                   const std::vector<double> &distancesOMPL,
                   const std::vector<double> &distancesDesaulniers) const;
