@@ -1556,7 +1556,7 @@ void Solver::getErrors(const std::vector<State> &path, const State &to,
 /*****************************************************************************/
 /*****************************************************************************/
 void Solver::characterizeVariability() {
-  const int number_of_final_states = 1000000;
+  const int number_of_final_states = 100000000;
   std::vector<State> toStates;
   toStates.reserve(number_of_final_states);
   const bool use_config = true;
@@ -1645,6 +1645,17 @@ void Solver::characterizeVariability() {
     file << stateCategory[i].size() << " " << time_accelerated[i] << " "
          << time_OMPL[i] << " " << time_OMPL[i] / time_accelerated[i] << "\n";
   }
+
+  // weighted speedup factor
+  double total_time_accelerated = 0;
+  double total_time_OMPL = 0;
+  for (int i = 0; i < 20; ++i) {
+    total_time_accelerated += time_accelerated[i] * stateCategory[i].size();
+    total_time_OMPL += time_OMPL[i] * stateCategory[i].size();
+  }
+  double weighted_speedup = total_time_OMPL / total_time_accelerated;
+  std::cout << "Weighted speedup: " << weighted_speedup << std::endl;
+
 }
 
 } // namespace accelerated
