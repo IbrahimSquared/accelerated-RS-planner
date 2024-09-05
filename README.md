@@ -29,7 +29,7 @@ Table: Benchmarking results of our proposed planner against OMPL's implementatio
 ["An efficient algorithm to find a shortest path for a car-like robot"]: https://ieeexplore.ieee.org/document/478429
 
 ## Sample partition in 3D
-3D partition of regions in the configuration space. Each color refers to a unique region (out of 21) where one identified path type is certainly the shortest. 1 million configurations $p_{f}$ spanning $\big[ [-100,100,], [-100,100], [-\pi,\pi)\big]$ for $p_{0} = (0,0,0)$ and $r = 20$. Red axis = $x$ axis, blue axis = $y$ axis, yellow axis = $\theta$ axis. <br>
+3D partition of regions in the configuration space. Each color refers to a unique region (out of 20) where one identified path type is certainly the shortest. 1 million configurations $p_{f}$ spanning $\big[ [-100,100,], [-100,100], [-\pi,\pi)\big]$ for $p_{0} = (0,0,0)$ and $r = 20$. Red axis = $x$ axis, blue axis = $y$ axis, yellow axis = $\theta$ axis. <br>
 ![alt text](https://github.com/IbrahimSquared/accelerated-RS-planner/blob/master/samples/3D_cases_cropped.png) <br>
 
 ## Variability Based on Types
