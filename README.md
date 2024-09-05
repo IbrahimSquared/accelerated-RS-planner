@@ -1,10 +1,10 @@
 # Accelerated Reeds-Shepp Planning
 
-Solves the Reeds-Shepp path planning problem 11.5x faster on average than [OMPL]'s implementation. 
+Solves the Reeds-Shepp path planning problem 15x faster on average than [OMPL]'s implementation. 
 
 Paper attachment TBD.
 
-Reduces set of cases to consider down to 21 and introduces a new partition that speeds up the computation of the shortest path.
+Reduces set of cases to consider down to 20 and introduces a new partition that speeds up the computation of the shortest path.
 
 Requires SFML & OMPL. It has a demo in main.cpp that computes and draws paths between randomly generated start/end configurations. 
 
