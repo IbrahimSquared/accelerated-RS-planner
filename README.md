@@ -34,31 +34,31 @@ Table: Benchmarking results of our proposed planner against OMPL's implementatio
 
 ## Variability Based on Types
 1e8 final configuration samples spanning $\big[ [-1000,1000,], [-1000,1000], [-\pi,\pi)\big]$ for $p_{0} = (0,0,0)$ and $r = 400$.
-Average weighted overall speedup of 9.81.
+Computing those speedups for each path type incurs an overhead that makes the speedups slightly slower. This is only to show that the speedup is not uniform across all path types. 
+The weighted average speedup is around 11.87.
 
 Type           | Occurrences | Speedup
 ---------------|-------------|---------
-1              | 6823115     | 11.9545
-2              | 8680998     | 15.8642
-3              | 9880886     | 13.0868
-4              | 7623824     | 10.9164
-5              | 6739044     | 10.3029
-6              | 6693750     | 10.2591
-7              | 792041      | 8.47368
-8              | 2287595     | 8.43132
-9              | 552624      | 7.20518
-10             | 2528582     | 7.78676
-11             | 1985492     | 12.5532
-12             | 11731       | 8.20847
-13             | 7491673     | 6.54899
-14             | 7419901     | 8.58719
-15             | 7711509     | 11.0584
-16             | 8682147     | 6.06762
-17             | 1116735     | 6.12062
-18             | 10949425    | 6.70373
-19             | 138795      | 5.18895
-20             | 602842      | 10.489
-21             | 1287291     | 5.05853
+1              | 6829417     | 11.5399
+2              | 8684623     | 13.1266
+3              | 9879506     | 12.3335
+4              | 7630623     | 13.4698
+5              | 6732552     | 12.8536
+6              | 6683699     | 11.8223
+7              | 791193      | 11.4474
+8              | 2287070     | 11.8638
+9              | 554434      | 11.7778
+10             | 2529318     | 11.9787
+11             | 1985832     | 10.639
+12             | 11555       | 10.8744
+13             | 7494149     | 10.3889
+14             | 8013981     | 11.3507
+15             | 7714423     | 9.52923
+16             | 9776168     | 11.3254
+17             | 1118135     | 10.2761
+18             | 9897533     | 11.0233
+19             | 138503      | 9.18825
+20             | 1247286     | 8.42923
 
 ## How to Use (to be completed)
 Set compiler path if needed. Make sure SFML: <br>
