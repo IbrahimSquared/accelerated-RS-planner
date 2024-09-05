@@ -4,7 +4,6 @@
 #include <SFML/Graphics.hpp>
 #include <chrono>
 #include <complex>
-#include <fstream>
 #include <numbers>
 #include <ompl/base/ScopedState.h>
 #include <ompl/base/spaces/ReedsSheppStateSpace.h>
@@ -28,90 +27,62 @@ inline const double Solver::wrapToPi(double angle) const {
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::Beta1(const double x, const double y, const double thetaf,
-                          double &t, double &u) const {
+inline const double Solver::wrapTo2Pi(double angle) const {
+  angle = fmod(angle + 2 * pi, 2 * pi);
+  if (angle < 0) {
+    angle += 2 * pi;
+  }
+  return angle;
+}
+
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+inline void Solver::P1(const double x, const double y, const double thetaf,
+                       double &d) {
   const double dx = x + sin(thetaf);
   const double dy = y - 1 - cos(thetaf);
   const double phi = atan2(dy, dx);
   double rho = dx * dx + dy * dy;
+  double t, u;
   if (rho < 4) {
-    std::complex<double> a;
-    a = sqrt(std::complex<double>(rho - 4, 0));
-    u = std::real(a);
+    u = 0;
+    t = wrapToPi(phi + pi / 2);
   } else {
     u = sqrt(rho - 4);
+    t = atan2(2, u);
+    t = wrapToPi(phi + t);
   }
-  t = atan2(2, u);
-  t = wrapToPi(phi + t);
+  const double v = wrapToPi(t - thetaf);
+  d = fabs(t) + fabs(u) + fabs(v);
+  lengths_[0][0] = t;
+  lengths_[0][1] = u;
+  lengths_[0][2] = v;
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::Beta4(const double x, const double y, const double thetaf,
-                          double &t, double &u, double &v) const {
-  const double xb = -(x * cos(thetaf) + y * sin(thetaf));
-  const double yb = x * sin(thetaf) - y * cos(thetaf);
-  const double xi = xb - sin(-thetaf);
-  const double eta = yb - 1 + cos(-thetaf);
-  const double rho = sqrt(xi * xi + eta * eta);
-  const double phi = atan2(eta, xi);
-  const double rr = sqrt(rho * rho - 4);
-  u = 2 - rr;
-  t = wrapToPi(phi + atan2(rr, -2));
-  v = wrapToPi(-thetaf - 0.5 * pi - t);
+inline void Solver::P2(const double x, const double y, const double thetaf,
+                       double &d) {
+  const double dx = x - sin(thetaf);
+  const double dy = y - 1 + cos(thetaf);
+
+  const double u = sqrt(dx * dx + dy * dy);
+  const double t = atan2(dy, dx);
+  const double v = wrapToPi(thetaf - t);
+
+  d = fabs(t) + fabs(u) + fabs(v);
+
+  lengths_[1][0] = t;
+  lengths_[1][1] = u;
+  lengths_[1][2] = v;
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::Beta5(const double x, const double y, const double thetaf,
-                          double &t, double &u) const {
-  const double xi = x - sin(-thetaf);
-  const double eta = -y - 1 + cos(-thetaf);
-  const double rho = sqrt(xi * xi + eta * eta);
-  const double phi = atan2(eta, xi);
-  const double rr = sqrt(rho * rho - 4);
-  u = 2 - rr;
-  t = wrapToPi(phi + atan2(rr, -2));
-}
-
-/*****************************************************************************/
-/*****************************************************************************/
-/*****************************************************************************/
-inline void Solver::Beta7(const double x, const double y, const double thetaf,
-                          double &t, double &u) const {
-  const double dx = x + sin(-thetaf);
-  const double dy = -y - 1 - cos(-thetaf);
-  const double rho = (dx * dx + dy * dy);
-  const double phi = atan2(dy, dx);
-  if (rho < 4) {
-    std::complex<double> a;
-    a = sqrt(std::complex<double>(rho - 4, 0));
-    u = std::real(a);
-  } else {
-    u = sqrt(rho - 4);
-  }
-  t = wrapToPi(phi + atan2(2, u));
-};
-
-/*****************************************************************************/
-/*****************************************************************************/
-/*****************************************************************************/
-inline void Solver::Beta9(const double x, const double y, const double thetaf,
-                          double &t, double &u) const {
-  const double xi = -x + sin(thetaf);
-  const double eta = -y - 1 - cos(thetaf);
-  const double rho = xi * xi + eta * eta;
-  const double phi = atan2(eta, xi);
-  u = 4 - sqrt(rho - 4);
-  t = wrapToPi(atan2((4 - u) * xi - 2 * eta, -2 * xi + (u - 4) * eta));
-}
-
-/*****************************************************************************/
-/*****************************************************************************/
-/*****************************************************************************/
-inline void Solver::T3(const double x, const double y, const double thetaf,
+inline void Solver::P3(const double x, const double y, const double thetaf,
                        double &d) {
   // backwards
   const double xb = -(x * cos(thetaf) + y * sin(thetaf));
@@ -134,7 +105,55 @@ inline void Solver::T3(const double x, const double y, const double thetaf,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::T6(const double x, const double y, const double thetaf,
+inline void Solver::P4(const double x, const double y, const double thetaf,
+                       double &d) {
+  const double xb = -(x * cos(thetaf) + y * sin(thetaf));
+  const double yb = x * sin(thetaf) - y * cos(thetaf);
+
+  const double xi = xb - sin(-thetaf);
+  const double eta = yb - 1 + cos(-thetaf);
+  const double rho = sqrt(xi * xi + eta * eta);
+  const double phi = atan2(eta, xi);
+  const double rr = sqrt(rho * rho - 4);
+
+  const double u = 2 - rr;
+  const double t = wrapToPi(phi + atan2(rr, -2));
+  const double v = wrapToPi(-thetaf - 0.5 * pi - t);
+
+  d = fabs(t) + fabs(u) + fabs(v) + pi / 2;
+
+  lengths_[3][0] = -v;
+  lengths_[3][1] = -u;
+  lengths_[3][2] = pi / 2;
+  lengths_[3][3] = -t;
+}
+
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+inline void Solver::P5(const double x, const double y, const double thetaf,
+                       double &d) {
+  const double xi = x - sin(-thetaf);
+  const double eta = -y - 1 + cos(-thetaf);
+  const double rho = sqrt(xi * xi + eta * eta);
+  const double phi = atan2(eta, xi);
+  const double rr = sqrt(rho * rho - 4);
+  const double u = 2 - rr;
+  const double t = wrapToPi(phi + atan2(rr, -2));
+  const double v = wrapToPi(-thetaf - 0.5 * pi - t);
+
+  d = fabs(t) + fabs(u) + fabs(v) + pi / 2;
+
+  lengths_[4][0] = t;
+  lengths_[4][1] = -pi / 2;
+  lengths_[4][2] = u;
+  lengths_[4][3] = v;
+}
+
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+inline void Solver::P6(const double x, const double y, const double thetaf,
                        double &d) {
   const double xi = x + sin(-thetaf);
   const double eta = -y - 1 - cos(-thetaf);
@@ -155,7 +174,33 @@ inline void Solver::T6(const double x, const double y, const double thetaf,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::T8(const double x, const double y, const double thetaf,
+inline void Solver::P7(const double x, const double y, const double thetaf,
+                       double &d) {
+  const double dx = x + sin(-thetaf);
+  const double dy = -y - 1 - cos(-thetaf);
+  const double rho = (dx * dx + dy * dy);
+  const double phi = atan2(dy, dx);
+  double u, t;
+  if (rho < 4) {
+    u = 0;
+    t = wrapToPi(phi + pi / 2);
+  } else {
+    u = sqrt(rho - 4);
+    t = wrapToPi(phi + atan2(2, u));
+  }
+  const double v = wrapToPi(t + thetaf);
+
+  d = fabs(t) + fabs(u) + fabs(v);
+
+  lengths_[6][0] = t;
+  lengths_[6][1] = u;
+  lengths_[6][2] = v;
+}
+
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+inline void Solver::P8(const double x, const double y, const double thetaf,
                        double &d) {
   // must be backwards, check later
   const double xb = -(x * cos(thetaf) + y * sin(thetaf));
@@ -180,30 +225,15 @@ inline void Solver::T8(const double x, const double y, const double thetaf,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::T9(const double x, const double y, const double thetaf,
+inline void Solver::P9(const double x, const double y, const double thetaf,
                        double &d) {
-  double beta9, u;
-  Beta9(x, y, thetaf, beta9, u);
-  const double v = wrapToPi(beta9 - thetaf);
-
-  d = fabs(beta9) + fabs(u) + fabs(v) + pi;
-
-  lengths_[8][0] = -beta9;
-  lengths_[8][1] = pi / 2;
-  lengths_[8][2] = -u;
-  lengths_[8][3] = pi / 2;
-  lengths_[8][4] = -v;
-}
-
-/*****************************************************************************/
-/*****************************************************************************/
-/*****************************************************************************/
-inline void Solver::T9(const double xi, const double eta, const double rho,
-                       const double thetaf, double &d) {
+  const double xi = -x + sin(thetaf);
+  const double eta = -y - 1 - cos(thetaf);
+  const double rho = xi * xi + eta * eta;
   const double phi = atan2(eta, xi);
-  const double u = 4 - sqrt(rho - 4);
-  const double t =
-      wrapToPi(atan2((4 - u) * xi - 2 * eta, -2 * xi + (u - 4) * eta));
+  double t, u;
+  u = 4 - sqrt(rho - 4);
+  t = wrapToPi(atan2((4 - u) * xi - 2 * eta, -2 * xi + (u - 4) * eta));
   const double v = wrapToPi(t - thetaf);
 
   d = fabs(t) + fabs(u) + fabs(v) + pi;
@@ -218,7 +248,7 @@ inline void Solver::T9(const double xi, const double eta, const double rho,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::T10(const double x, const double y, const double thetaf,
+inline void Solver::P10(const double x, const double y, const double thetaf,
                         double &d) {
   const double xi = -x - sin(thetaf);
   const double eta = -y - 1 + cos(thetaf);
@@ -240,7 +270,7 @@ inline void Solver::T10(const double x, const double y, const double thetaf,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::T11(const double x, const double y, const double thetaf,
+inline void Solver::P11(const double x, const double y, const double thetaf,
                         double &d) {
   const double xi = -x + sin(thetaf);
   const double eta = -y - 1 - cos(thetaf);
@@ -261,7 +291,7 @@ inline void Solver::T11(const double x, const double y, const double thetaf,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::T12(const double x, const double y, const double thetaf,
+inline void Solver::P12(const double x, const double y, const double thetaf,
                         double &d) {
   const double xi = x + sin(-thetaf);
   const double eta = -y - 1 - cos(-thetaf);
@@ -283,12 +313,11 @@ inline void Solver::T12(const double x, const double y, const double thetaf,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::T13(const double x, const double y, const double thetaf,
-                        double &xi, double &eta, double &rho, double &t,
+inline void Solver::P13(const double x, const double y, const double thetaf,
                         double &d) {
-  xi = -x + sin(thetaf);
-  eta = -y - 1 - cos(thetaf);
-  rho = xi * xi + eta * eta;
+  const double xi = -x + sin(thetaf);
+  const double eta = -y - 1 - cos(thetaf);
+  const double rho = xi * xi + eta * eta;
   const double rho_CCCC = (20 - rho) / 16;
   double u;
   if (rho_CCCC < 0 || rho_CCCC > 1) {
@@ -300,7 +329,7 @@ inline void Solver::T13(const double x, const double y, const double thetaf,
   }
   const double A = sin(u);
   const double B = cos(u) - 2;
-  t = atan2(eta * A - xi * B, xi * A + eta * B);
+  const double t = atan2(eta * A - xi * B, xi * A + eta * B);
   const double v = (t - thetaf);
 
   d = fabs(t) + 2 * fabs(u) + fabs(v);
@@ -314,37 +343,7 @@ inline void Solver::T13(const double x, const double y, const double thetaf,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::T13(const double x, const double y, const double thetaf,
-                        double &xi, double &eta, double &rho, double &t1,
-                        double &t2, double &u1, double &u2, double &v1,
-                        double &v2) const {
-  xi = x + sin(-thetaf);
-  eta = -y - 1 - cos(-thetaf);
-  rho = xi * xi + eta * eta;
-  const double rho_CCCC = (20 - rho) / 16;
-  double u;
-  if (rho_CCCC < 0 || rho_CCCC > 1) {
-    std::complex<double> a;
-    a = -acos(rho_CCCC);
-    u = std::real(a);
-  } else {
-    u = -acos(rho_CCCC);
-  }
-  const double A = sin(u);
-  const double B = cos(u) - 2;
-  t1 = atan2(eta * A - xi * B, xi * A + eta * B);
-  u1 = u;
-  v1 = (t1 + thetaf);
-  t2 = atan2(eta * A + xi * B, -xi * A + eta * B);
-  u2 = u;
-  v2 = (t2 - thetaf);
-  xi = -xi;
-}
-
-/*****************************************************************************/
-/*****************************************************************************/
-/*****************************************************************************/
-inline void Solver::T14(const double x, const double y, const double thetaf,
+inline void Solver::P14(const double x, const double y, const double thetaf,
                         double &d) {
   const double xi = -x - sin(thetaf);
   const double eta = -y - 1 + cos(thetaf);
@@ -359,26 +358,39 @@ inline void Solver::T14(const double x, const double y, const double thetaf,
   lengths_[13][0] = -t;
   lengths_[13][1] = -u;
   lengths_[13][2] = -v;
+
+  // std::cout << "T14: " << (-t < 0 ? "-" : "+") << "t, " << (-u < 0 ? "-" :
+  // "+")
+  //           << "u, " << (-v < 0 ? "-" : "+") << "v" << std::endl;
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::T15(const double x, const double y, const double thetaf,
-                        double &t, double &u, double &v) const {
+inline void Solver::P15(const double x, const double y, const double thetaf,
+                        double &d) {
   const double xi = x - sin(thetaf);
   const double eta = y - 1 + cos(thetaf);
   const double u1 = sqrt(xi * xi + eta * eta);
   const double theta = atan2(eta, xi);
-  u = -2 * asin(0.25 * u1);
-  t = wrapToPi(theta + 0.5 * u + pi);
-  v = wrapToPi(thetaf - t + u);
+  const double u = -2 * asin(0.25 * u1);
+  const double t = wrapToPi(theta + 0.5 * u + pi);
+  const double v = wrapToPi(thetaf - t + u);
+
+  d = fabs(t) + fabs(u) + fabs(v);
+
+  lengths_[14][0] = t;
+  lengths_[14][1] = u;
+  lengths_[14][2] = v;
+
+  // std::cout << "T15: " << (t < 0 ? "-" : "+") << "t, " << (u < 0 ? "-" : "+")
+  //           << "u, " << (v < 0 ? "-" : "+") << "v" << std::endl;
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::T16(const double x, const double y, const double thetaf,
+inline void Solver::P16(const double x, const double y, const double thetaf,
                         double &d) {
   const double xb = x * cos(thetaf) + y * sin(thetaf);
   const double yb = x * sin(thetaf) - y * cos(thetaf);
@@ -400,7 +412,35 @@ inline void Solver::T16(const double x, const double y, const double thetaf,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::T18(const double x, const double y, const double thetaf,
+inline void Solver::P17(const double x, const double y, const double thetaf,
+                        double &d) {
+  const double xi = x + sin(-thetaf);
+  const double eta = -y - 1 - cos(-thetaf);
+  const double rho = xi * xi + eta * eta;
+  const double rho_CCCC = (20 - rho) / 16;
+  double u;
+  if (rho_CCCC < 0 || rho_CCCC > 1) {
+    std::complex<double> a;
+    a = -acos(rho_CCCC);
+    u = std::real(a);
+  } else {
+    u = -acos(rho_CCCC);
+  }
+  const double A = sin(u);
+  const double B = cos(u) - 2;
+  const double t = atan2(eta * A - xi * B, xi * A + eta * B);
+  const double v = (t + thetaf);
+  d = fabs(t) + 2 * fabs(u) + fabs(v);
+  lengths_[16][0] = t;
+  lengths_[16][1] = u;
+  lengths_[16][2] = u;
+  lengths_[16][3] = v;
+}
+
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+inline void Solver::P18(const double x, const double y, const double thetaf,
                         double &d) {
   const double xi = x + sin(thetaf);
   const double eta = -y - 1 + cos(-thetaf);
@@ -420,39 +460,7 @@ inline void Solver::T18(const double x, const double y, const double thetaf,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::T20(const double x, const double y, const double thetaf,
-                        double &d) {
-  const double xb = x * cos(thetaf) + y * sin(thetaf);
-  const double yb = x * sin(thetaf) - y * cos(thetaf);
-  const double xi = -xb - sin(thetaf);
-  const double eta = -yb - 1 + cos(thetaf);
-  const double u1 = sqrt(xi * xi + eta * eta);
-  const double theta = atan2(eta, xi);
-  const double u = -2 * asin(0.25 * u1);
-  const double t = wrapToPi(theta + 0.5 * u + pi);
-  const double v = wrapToPi(thetaf - t + u);
-
-  d = fabs(t) + fabs(u) + fabs(v);
-
-  lengths_[19][0] = -v;
-  lengths_[19][1] = -u;
-  lengths_[19][2] = -t;
-}
-
-/*****************************************************************************/
-/*****************************************************************************/
-/*****************************************************************************/
-inline void Solver::T19_rho(const double x, const double y, const double thetaf,
-                            double &xi, double &eta, double &rho) const {
-  xi = -x + sin(-thetaf);
-  eta = y - 1 - cos(-thetaf);
-  rho = 0.25 * (2 + sqrt(xi * xi + eta * eta));
-}
-
-/*****************************************************************************/
-/*****************************************************************************/
-/*****************************************************************************/
-inline void Solver::T19(const double x, const double y, const double thetaf,
+inline void Solver::P19(const double x, const double y, const double thetaf,
                         double &d) {
   const double xi = -x + sin(-thetaf);
   const double eta = y - 1 - cos(-thetaf);
@@ -475,28 +483,7 @@ inline void Solver::T19(const double x, const double y, const double thetaf,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline void Solver::T19(const double xi, const double eta, const double rho,
-                        const double thetaf, double &d) {
-  const double u1 = acos(rho);
-  const double delta = wrapToPi(2 * u1);
-  const double A = sin(u1) - sin(delta);
-  const double B = cos(u1) - cos(delta) - 1;
-  const double t1 = atan2(eta * A - xi * B, xi * A + eta * B);
-  const double t = wrapToPi(t1);
-  const double v = (t - 2 * u1 + thetaf);
-
-  d = fabs(t) + 2 * fabs(u1) + fabs(v);
-
-  lengths_[18][0] = -t;
-  lengths_[18][1] = -u1;
-  lengths_[18][2] = u1;
-  lengths_[18][3] = -v;
-}
-
-/*****************************************************************************/
-/*****************************************************************************/
-/*****************************************************************************/
-inline void Solver::T21(const double x, const double y, const double thetaf,
+inline void Solver::P20(const double x, const double y, const double thetaf,
                         double &d) {
   const double xi = x + sin(thetaf);
   const double eta = y - 1 - cos(thetaf);
@@ -511,353 +498,369 @@ inline void Solver::T21(const double x, const double y, const double thetaf,
 
   d = fabs(t) + 2 * fabs(u) + fabs(v);
 
-  lengths_[20][0] = t;
-  lengths_[20][1] = u;
-  lengths_[20][2] = -u;
-  lengths_[20][3] = v;
+  lengths_[19][0] = t;
+  lengths_[19][1] = u;
+  lengths_[19][2] = -u;
+  lengths_[19][3] = v;
+
+  // std::cout << "T20: " << (t < 0 ? "-" : "+") << "t, " << (u < 0 ? "-" : "+")
+  //           << "u, " << (-u < 0 ? "-" : "+") << "u, " << (v < 0 ? "-" : "+")
+  //           << "v" << std::endl;
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
 void Solver::setA(const double x, const double y, const double thetaf,
-                  const double r, const double beta0, int &cond, double &d) {
+                  const double r, const double beta0, int &cond, double &d,
+                  const double x0, const double xn, const double yn) {
   // Set A
   if (thetaf >= 0) {
-    if (thetaf <= atan2(fabs(cylf_ - cyl0_), cxlf_ - cxl0_)) { // omega
-      if (thetaf >= atan2(cylf_ - cyr0_, cxlf_ - cxr0_)) {
+    // 7, 8 - singled out
+    if (cfLy_ <= c0Ly_ && cfRy_ <= c0Ly_) {
+      double t2 = (c0Rx_ - xn) * cos(thetaf) + (c0Ry_ - yn) * sin(thetaf);
+      const double t2x = t2 * cos(thetaf) + xn;
+      const double t2y = t2 * sin(thetaf) + yn;
+      const double d1 = euclideanDistance(t2x, t2y, c0Rx_, c0Ry_);
+      if (t2 <= -2 * r || d1 <= r) {
+        // P7
+        P7(x, y, thetaf, d);
+        d *= r;
+        cond = 7;
+        return;
+      }
+      // P8
+      P8(x, y, thetaf, d);
+      d *= r;
+      cond = 8;
+      return;
+    }
+
+    // 1, 9, 10, 11
+    const double LfL0 = atan2(cfLy_ - c0Ly_, cfLx_ - c0Lx_);
+    if (thetaf < fabs(LfL0)) { // omega
+      // 11 directly singled out
+      if (thetaf > atan2(cfLy_ - c0Ry_, cfLx_ - c0Rx_)) {
         // CCSC | -R+L+S+L
-        T11(x, y, thetaf, d);
+        P11(x, y, thetaf, d);
         d *= r;
         cond = 11;
         return;
       }
-      double beta1, u;
-      Beta1(x, y, thetaf, beta1, u);
-      if (beta1 <= pi / 2) {
+
+      // 1 , 9, 10
+      // 1
+      double u;
+      if (cfRx_ >= 2 * r + x0 || cfRy_ <= c0Ly_) {
         // CSC | +L+S+R
-        const double v = wrapToPi(beta1 - thetaf);
-        d = fabs(beta1) + fabs(u) + fabs(v);
+        P1(x, y, thetaf, d);
         d *= r;
         cond = 1;
-        lengths_[0][0] = beta1;
-        lengths_[0][1] = u;
-        lengths_[0][2] = v;
         return;
       }
-      double beta9;
-      Beta9(x, y, thetaf, beta9, u);
-      if (beta9 > thetaf) {
+      double t2 = (c0Rx_ - xn) * cos(thetaf) + (c0Ry_ - yn) * sin(thetaf);
+      // 9
+      if (fabs(t2) <= 2 * r) {
         // CCSCC | -R+L+S+R-L
-        double v = wrapToPi(beta9 - thetaf);
-        d = fabs(beta9) + fabs(u) + fabs(v) + pi;
+        P9(x, y, thetaf, d);
         d *= r;
         cond = 9;
-        lengths_[8][0] = -beta9;
-        lengths_[8][1] = pi / 2;
-        lengths_[8][2] = -u;
-        lengths_[8][3] = pi / 2;
-        lengths_[8][4] = -v;
         return;
       }
+      // 10
       // CCSC | -R+L+S+R
-      T10(x, y, thetaf, d);
+      P10(x, y, thetaf, d);
       d *= r;
       cond = 10;
       return;
     }
 
-    double dx = x - sin(thetaf);
-    if (dx < 0) {
+    // thetaf >= LfL0
+    if (cfLx_ < 0) {
       // CCSC | -R+L+S+L
-      T11(x, y, thetaf, d);
+      P11(x, y, thetaf, d);
       d *= r;
       cond = 11;
       return;
     }
-
-    const double dy = y - 1 + cos(thetaf);
-    double rho, beta2;
-    polar(dx, dy, rho, beta2);
-    if (beta2 < 0 && atan2(cyrf_ - cyl0_, cxrf_ - cxl0_) < 0) {
-      double beta7, u;
-      Beta7(x, y, thetaf, beta7, u);
-      if (beta7 + thetaf <= pi / 2) {
-        // CSC | +R+S+L
-        double v = wrapToPi(beta7 + thetaf);
-        d = fabs(beta7) + fabs(u) + fabs(v);
-        d *= r;
-        cond = 7;
-        lengths_[6][0] = beta7;
-        lengths_[6][1] = u;
-        lengths_[6][2] = v;
-        return;
-      }
-      // CSCC | +R+S+L-R
-      T8(x, y, thetaf, d);
-      d *= r;
-      cond = 8;
-      return;
-    }
-    if (thetaf > pi / 2 + beta2) {
-      // CSCC | +L+S+L-R
-      T3(x, y, thetaf, d);
+    // 2, 3
+    if (thetaf > LfL0 + pi / 2) {
+      P3(x, y, thetaf, d);
       d *= r;
       cond = 3;
       return;
+    } else {
+      P2(x, y, thetaf, d);
+      d *= r;
+      cond = 2;
+      return;
     }
-    // CSC | +L+S+L
-    const double v_ = wrapToPi(thetaf - beta2);
-    d = fabs(beta2) + fabs(rho) + fabs(v_);
-    d *= r;
-    lengths_[1][0] = beta2;
-    lengths_[1][1] = rho;
-    lengths_[1][2] = v_;
-    cond = 2;
-    return;
   }
+  // const double RfL0 = atan2(cfRy_ - c0Ly_, cfRx_ - c0Lx_);
+  // const double LfR0 = atan2(cfLy_ - c0Ry_, cfLx_ - c0Rx_);
+  // if (thetaf < 2 * beta0 - pi) {
+  // } else {
+  //   // std::cout << (LfR0 >= RfL0) << std::endl;
+  // }
 
   // thetaf < 0
-  double beta1, u;
-  Beta1(x, y, thetaf, beta1, u);
+  double u;
+  // 5, 6, 12
   if (thetaf < 2 * beta0 - pi) {
-    if (thetaf < atan2(cylf_ - cyr0_, cxlf_ - cxr0_) - pi) {
+    // 6
+    const double R0Lf = atan2(c0Ry_ - cfLy_, c0Rx_ - cfLx_);
+    if (thetaf < R0Lf) {
       // CCSC | +R-L-S-L
-      T6(x, y, thetaf, d);
+      P6(x, y, thetaf, d);
       d *= r;
       cond = 6;
       return;
     }
-    double beta5;
-    Beta5(x, y, thetaf, beta5, u);
-    if (thetaf <= -beta5) {
-      // CCSC | +R-L-S-R
-      double v = wrapToPi(-thetaf - 0.5 * pi - beta5);
-      d = fabs(beta5) + fabs(u) + fabs(v) + pi / 2;
+    // 5
+    double t2 = (c0Rx_ - xn) * cos(thetaf) + (c0Ry_ - yn) * sin(thetaf);
+    if (fabs(t2) <= 2 * r) {
+      // 12
+      // CCSCC | +R-L-S-R+L
+      P12(x, y, thetaf, d);
       d *= r;
-      cond = 5;
-      lengths_[4][0] = beta5;
-      lengths_[4][1] = -pi / 2;
-      lengths_[4][2] = u;
-      lengths_[4][3] = v;
+      cond = 12;
       return;
     }
-    // CCSCC | +R-L-S-R+L
-    T12(x, y, thetaf, d);
+    // CCSC | +R-L-S-R
+    P5(x, y, thetaf, d);
     d *= r;
-    cond = 12;
+    cond = 5;
     return;
   }
-  if (fabs(thetaf) + beta1 >= pi / 2) {
-    double t, u, beta4;
-    Beta4(x, y, thetaf, t, u, beta4);
-    if (fabs(beta4) < pi / 2) {
-      // CSCC | +L+S+R-L
-      d = fabs(t) + fabs(u) + fabs(beta4) + pi / 2;
-      d *= r;
-      cond = 4;
-      lengths_[3][0] = -beta4;
-      lengths_[3][1] = -u;
-      lengths_[3][2] = pi / 2;
-      lengths_[3][3] = -t;
-      return;
-    }
-    // CCSCC | -R+L+S+R-L
-    T9(x, y, thetaf, d);
+
+  // 1
+  const double RfL0 = atan2(cfRy_ - c0Ly_, cfRx_ - c0Lx_);
+  double t1 = (c0Lx_ - xn) * cos(thetaf) + (c0Ly_ - yn) * sin(thetaf);
+  if (RfL0 <= thetaf || t1 <= -2 * r) {
+    // CSC | +L+S+R
+    P1(x, y, thetaf, d);
     d *= r;
-    cond = 9;
+    cond = 1;
     return;
   }
-  // CSC | +L+S+R
-  const double v = wrapToPi(beta1 - thetaf);
-  d = fabs(beta1) + fabs(u) + fabs(v);
+  if (cfLx_ >= 2 * r) {
+    // 4
+    P4(x, y, thetaf, d);
+    d *= r;
+    cond = 4;
+    return;
+  }
+  // 9
+  P9(x, y, thetaf, d);
   d *= r;
-  cond = 1;
-  lengths_[0][0] = beta1;
-  lengths_[0][1] = u;
-  lengths_[0][2] = v;
+  cond = 9;
+  return;
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
 void Solver::setB(const double x, const double y, const double thetaf,
-                  const double r, const bool pred_1, const bool pred_2,
-                  int &cond, double &d) {
-  // Set B
-  if (thetaf >= 0) {
-    double rho, beta13, d2, xi, eta;
-    T13(x, y, thetaf, xi, eta, rho, beta13, d2);
-    d2 = d2 * r;
-    if (beta13 >= 0 && beta13 >= thetaf) {
-      if (rho >= 20) {
-        // CCSCC
-        T9(xi, eta, rho, thetaf, d);
-        d *= r;
-        cond = 9;
-        return;
-      }
-      // CCCC two possibilities
-      double d1;
-      T19(x, y, thetaf, d1);
-      d1 *= r;
-      if (d1 < d2) {
-        d = d1;
-        cond = 19;
-        return;
-      }
-      d = d2;
-      cond = 13;
+                  const double xn, const double yn, const double r, int &cond,
+                  double &d, const double beta0) {
+  // 9, 12
+  if (RL >= sqrt(20) * r) {
+    // const double RfL0 = atan2(cfRy_ - c0Ly_, cfRx_ - c0Lx_);
+    // const double LfR0 = atan2(cfLy_ - c0Ry_, cfLx_ - c0Rx_);
+    // (LfR0 >= RfL0)
+    if (thetaf > 2 * beta0 - pi) {
+      // CCSCC
+      P9(x, y, thetaf, d);
+      d *= r;
+      cond = 9;
       return;
     }
+    // CCSCC
+    P12(x, y, thetaf, d);
+    d *= r;
+    cond = 12;
+    return;
+  }
 
+  if (thetaf >= 0) {
+    // cond 13, 14, 19
     if (thetaf < pi / 2) {
-      double d2;
-      T14(x, y, thetaf, d2);
-      d2 *= r;
-      if (pred_2) {
-        // CCC
-        d = d2;
-        cond = 14;
+      double alpha = acos((3 * r * r + 0.25 * RL * RL) / (2 * r * RL));
+      const double R0Lf = atan2(c0Ry_ - cfLy_, c0Rx_ - cfLx_);
+      double beta = thetaf - pi / 2 - R0Lf;
+
+      // 13, 19
+      if (alpha >= beta) {
+        const double c_13 = sqrt((RL * RL + 4 * r * r) / 2 - 4 * r * r);
+        const double beta_13 =
+            acos((4 * r * r + RL * RL - c_13 * c_13) / (4 * r * RL));
+        const double T_13 = R0Lf + pi / 2 + beta_13;
+        const double U_13 = acos((8 * r * r - c_13 * c_13) / (8 * r * r));
+
+        const double U_19 = acos((0.5 * LR + r) / (2 * r));
+        const double L0Rf = atan2(c0Ly_ - cfRy_, c0Lx_ - cfRx_);
+        const double beta_19 = thetaf + pi / 2 - L0Rf;
+        const double V_19 = wrapTo2Pi(U_19 - beta_19);
+
+        if (T_13 <= V_19 || T_13 + U_13 <= 2 * U_19) {
+          // U_13 is always greater than U_19 here
+          d = r * (2 * T_13 - thetaf + 2 * U_13);
+          cond = 13;
+          const double V_13 = -T_13 + thetaf;
+          lengths_[12][0] = -T_13;
+          lengths_[12][1] = U_13;
+          lengths_[12][2] = U_13;
+          lengths_[12][3] = V_13;
+          return;
+        }
+        d = r * (4 * U_19 - thetaf);
+        cond = 19;
+        const double T_19 = 2 * U_19 - V_19 - thetaf;
+        lengths_[18][0] = -T_19;
+        lengths_[18][1] = -U_19;
+        lengths_[18][2] = U_19;
+        lengths_[18][3] = V_19;
         return;
       }
-      const bool pred_5 = RL <= limit && RR <= 2 * r && LL <= 2 * r;
-      const bool pred_6 = LR <= limit && RR <= 2 * r && LL <= 2 * r;
-      if (!(pred_5 && pred_6)) {
+
+      // 14, 19
+      double gamma = acos((0.5 * LR + r) / (2 * r));
+      double beta_3 = atan2(cfRy_ - c0Ly_, cfRx_ - c0Lx_) + pi / 2;
+      if (RL <= 2 * r || beta_3 >= gamma) {
+        // CCC
+        P14(x, y, thetaf, d);
+        d *= r;
         cond = 14;
-        d = d2;
         return;
       }
       // CCC or CCCC
-      double xi, eta, rho;
-      T19_rho(x, y, thetaf, xi, eta, rho);
-      double d1;
-      T19(xi, eta, rho, thetaf, d1);
-      d1 *= r;
-      if (d1 < d2) {
-        d = d1;
-        cond = 19;
-        return;
-      }
-      d = d2;
-      cond = 14;
+      P19(x, y, thetaf, d);
+      d *= r;
+      cond = 19;
       return;
     }
 
     // thetaf > pi/2
+    // 14, 15 split
     // CCC
-    if (pred_1 == pred_2) { // v > 0 && t > 0) {
-      double t, u, v;
-      T15(x, y, thetaf, t, u, v);
-      d = fabs(t) + fabs(u) + fabs(v);
+    if (LR <= 2 * r && RL <= 2 * r) {
+      P15(x, y, thetaf, d);
       d *= r;
-      lengths_[14][0] = t;
-      lengths_[14][1] = u;
-      lengths_[14][2] = v;
       cond = 15;
       return;
     }
-    T20(x, y, thetaf, d);
+    P14(x, y, thetaf, d);
+    d *= r;
+    cond = 14;
+    return;
+  }
+
+  // thetaf < 0, two cases
+  double alpha;
+  if (RL < 2.0 * r) {
+    alpha = 0;
+  } else {
+    alpha = acos((3 * r * r + 0.25 * RL * RL) / (2 * r * RL));
+  }
+  const double LfR0 = atan2(cfLy_ - c0Ry_, cfLx_ - c0Rx_);
+  const double beta_1 = pi / 2 - LfR0;
+  const double beta_2 = -thetaf - beta_1;
+  // Case 2: 13 20, 16, 20
+  if (thetaf >= 2 * LfR0 - pi) {
+    if (alpha > beta_1) {
+      // CCCC two possibilities
+      const double rl = LfR0 - pi;
+      const double c_13 = sqrt((RL * RL + 4 * r * r) / 2 - 4 * r * r);
+      const double beta_13 =
+          acos((4 * r * r + RL * RL - c_13 * c_13) / (4 * r * RL));
+      const double T_13 = rl + pi / 2 + beta_13;
+      const double V_13 = T_13 - thetaf;
+      const double U_13 = acos((8 * r * r - c_13 * c_13) / (8 * r * r));
+
+      const double U_20 = acos((0.5 * LR + r) / (2 * r));
+      const double L0Rf = atan2(c0Ly_ - cfRy_, c0Lx_ - cfRx_);
+      const double T_20 = wrapTo2Pi(U_20 - (pi / 2 - L0Rf));
+
+      if (V_13 <= T_20 || T_13 + U_13 <= thetaf + 2 * U_20) {
+        d = r * (2 * T_13 - thetaf + 2 * U_13);
+        cond = 13;
+        lengths_[12][0] = -T_13;
+        lengths_[12][1] = U_13;
+        lengths_[12][2] = U_13;
+        lengths_[12][3] = -V_13;
+        return;
+      }
+      d = r * (4 * U_20 + thetaf);
+      cond = 20;
+      lengths_[19][0] = T_20;
+      lengths_[19][1] = U_20;
+      lengths_[19][2] = -U_20;
+      const double V_20 = thetaf + 2 * U_20 - T_20;
+      lengths_[19][3] = -V_20;
+      return;
+    }
+    // CCC or CCCC
+    const double gamma = acos((0.5 * LR + r) / (2 * r));
+    const double O = 4 * r * sin(gamma / 2.0);
+    const bool cond_1 = O <= LL;
+    const bool cond_2 = O <= RR;
+    const bool cond_3 = cond_1 || cond_2;
+    if (cond_3) {
+      P16(x, y, thetaf, d);
+      d *= r;
+      cond = 16;
+      return;
+    }
+    P20(x, y, thetaf, d);
     d *= r;
     cond = 20;
     return;
   }
 
-  // thetaf < 0, two cases
-  double xi, eta, rho, t1, t2, u1, u2, v1, v2;
-  T13(x, y, thetaf, xi, eta, rho, t1, t2, u1, u2, v1, v2);
-  // Case 2
-  if (-t1 + t2 < thetaf) {
-    if (t2 >= 0) {
-      if (rho >= 20) {
-        // CCSCC
-        T9(xi, eta, rho, thetaf, d);
-        d *= r;
-        cond = 9;
-        return;
-      }
-      // CCCC two possibilities
-      double d1 = fabs(t2) + 2 * fabs(u2) + fabs(v2);
-      d1 *= r;
-      double d2;
-      T21(x, y, thetaf, d2);
-      d2 *= r;
-      if (d2 >= d1) {
-        d = d1;
-        cond = 13;
-        lengths_[12][0] = -t2;
-        lengths_[12][1] = -u2;
-        lengths_[12][2] = -u2;
-        lengths_[12][3] = -v2;
-        return;
-      }
-      d = d2;
-      cond = 21;
-      return;
-    }
-    // CCC or CCCC
-    double d1;
-    T16(x, y, thetaf, d1);
-    d1 *= r;
-    double d2;
-    T21(x, y, thetaf, d2);
-    d2 = d2 * r;
-    if (d1 <= d2) {
-      d = d1;
-      cond = 16;
-      return;
-    }
-    d = d2;
-    cond = 21;
-    return;
-  }
-
-  // Case 1
-  if (t1 >= 0 && t1 >= -thetaf) {
-    if (rho >= 20) {
-      // CCSCC
-      T12(x, y, thetaf, d);
-      d *= r;
-      cond = 12;
-      return;
-    }
+  // Case 1: 17, 20, 18, 20
+  // beta_1 <= beta2 || d_ < 2 * r - 17, 20
+  if (alpha >= beta_2) {
     // CCCC two possibilities
-    double d1 = fabs(t1) + 2 * fabs(u1) + fabs(v1);
-    lengths_[16][0] = t1;
-    lengths_[16][1] = u1;
-    lengths_[16][2] = u1;
-    lengths_[16][3] = v1;
-    d1 *= r;
-    double d2;
-    T21(x, y, thetaf, d2);
-    d2 *= r;
-    if (d1 <= d2) {
-      // CCCC
-      d = d1;
+    const double c_17 = sqrt((RL * RL + 4 * r * r) / 2 - 4 * r * r);
+    const double U_17 = acos((8 * r * r - c_17 * c_17) / (8 * r * r));
+    const double beta_17 =
+        acos((4 * r * r + RL * RL - c_17 * c_17) / (4 * r * RL));
+    const double T_17 = pi / 2 - LfR0 + beta_17;
+
+    const double U_20 = acos((0.5 * LR + r) / (2 * r));
+    const double L0Rf = atan2(c0Ly_ - cfRy_, c0Lx_ - cfRx_);
+    const double T_20 = wrapTo2Pi(U_20 - (pi / 2 - L0Rf));
+
+    if (T_17 <= T_20 || T_17 + U_17 <= 2 * U_20) {
+      d = r * (2 * T_17 + thetaf + 2 * U_17);
+      const double V_17 = T_17 + thetaf;
+      lengths_[16][0] = T_17;
+      lengths_[16][1] = -U_17;
+      lengths_[16][2] = -U_17;
+      lengths_[16][3] = V_17;
       cond = 17;
       return;
     }
-    // CCCC
-    d = d2;
-    cond = 21;
+    d = r * (4 * U_20 + thetaf);
+    cond = 20;
+    lengths_[19][0] = T_20;
+    lengths_[19][1] = U_20;
+    lengths_[19][2] = -U_20;
+    const double V_20 = thetaf + 2 * U_20 - T_20;
+    lengths_[19][3] = -V_20;
     return;
   }
-
-  double d1;
-  T18(x, y, thetaf, d1);
-  d1 *= r;
-  double d2;
-  T21(x, y, thetaf, d2);
-  d2 *= r;
-  if (d2 >= d1) {
-    // CCC
-    d = d1;
+  // alpha < beta_2 - 18 20
+  const double gamma = acos((0.5 * LR + r) / (2 * r));
+  const double O = 4 * r * sin(gamma / 2.0);
+  if (O <= RR || RL <= 2 * r) {
+    P18(x, y, thetaf, d);
     cond = 18;
-    return;
+  } else {
+    P20(x, y, thetaf, d);
+    cond = 20;
   }
-  // CCCC
-  d = d2;
-  cond = 21;
+  d *= r;
   return;
 }
 
@@ -899,36 +902,35 @@ void Solver::acceleratedRSPlanner(const State &from, const State &to, double &d,
   thetaf = wrapToPi(thetaf);
 
   // LHC and RHC
-  cxr0_ = x0 + r * cos(theta0 - pi / 2);
-  cyr0_ = y0 + r * sin(theta0 - pi / 2);
-  cxl0_ = x0 - r * cos(theta0 - pi / 2);
-  cyl0_ = y0 - r * sin(theta0 - pi / 2);
-  cxrf_ = xn + r * cos(thetaf - pi / 2);
-  cyrf_ = yn + r * sin(thetaf - pi / 2);
-  cxlf_ = xn - r * cos(thetaf - pi / 2);
-  cylf_ = yn - r * sin(thetaf - pi / 2);
+  c0Rx_ = x0 + r * cos(theta0 - pi / 2);
+  c0Ry_ = y0 + r * sin(theta0 - pi / 2);
+  c0Lx_ = x0 - r * cos(theta0 - pi / 2);
+  c0Ly_ = y0 - r * sin(theta0 - pi / 2);
+  cfRx_ = xn + r * cos(thetaf - pi / 2);
+  cfRy_ = yn + r * sin(thetaf - pi / 2);
+  cfLx_ = xn - r * cos(thetaf - pi / 2);
+  cfLy_ = yn - r * sin(thetaf - pi / 2);
 
   // Algorithm 3 (IsInSetB)
   limit = 2 * r * sqrt(2);
-  LL = euclideanDistance(cxl0_, cyl0_, cxlf_, cylf_);
-  LR = euclideanDistance(cxl0_, cyl0_, cxrf_, cyrf_);
-  RL = euclideanDistance(cxr0_, cyr0_, cxlf_, cylf_);
-  RR = euclideanDistance(cxr0_, cyr0_, cxrf_, cyrf_);
+  LL = euclideanDistance(c0Lx_, c0Ly_, cfLx_, cfLy_);
+  LR = euclideanDistance(c0Lx_, c0Ly_, cfRx_, cfRy_);
+  RL = euclideanDistance(c0Rx_, c0Ry_, cfLx_, cfLy_);
+  RR = euclideanDistance(c0Rx_, c0Ry_, cfRx_, cfRy_);
   const bool pred_1 = RR <= limit && LL <= limit && LR <= 2 * r;
   const bool pred_2 = RR <= limit && LL <= limit && RL <= 2 * r;
-  const bool pred_3 = LL <= limit && LR <= 2 * r && RL <= 2 * r;
+  const bool pred_3 = LR <= 2 * r && LL <= limit && RL <= 2 * r;
 
-  const std::complex<double> i(0.0, 1.0);
   const double x = (xn - x0) / r;
   const double y = (yn - y0) / r;
   const double beta0 = atan2(yn - y0, xn - x0);
 
   // Main Algorithm (4)
   if (pred_1 || pred_2 || pred_3) {
-    setB(x, y, thetaf, r, pred_1, pred_2, cond, d);
+    setB(x, y, thetaf, xn, yn, r, cond, d, beta0);
     return;
   } else {
-    setA(x, y, thetaf, r, beta0, cond, d);
+    setA(x, y, thetaf, r, beta0, cond, d, x0, xn, yn);
     return;
   }
 }
@@ -936,20 +938,120 @@ void Solver::acceleratedRSPlanner(const State &from, const State &to, double &d,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
+void Solver::evaluateQuery(const State &from, const State &to,
+                           const double radius) {
+
+  std::cout << "\n******************" << std::endl;
+  std::cout << "State_from: {" << from.x << ", " << from.y << ", " << from.theta
+            << "}" << std::endl;
+  std::cout << "State_to: {" << to.x << ", " << to.y << ", " << to.theta << "}"
+            << std::endl;
+
+  const double r = radius;
+  // Reeds-Shepp State Space (OMPL's implementation)
+  ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(r));
+  ob::ScopedState<> fromRSS(space), toRSS(space);
+
+  double d_accelerated = 0;
+  int condition = 0;
+  int Q = 0;
+  acceleratedRSPlanner(from, to, d_accelerated, r, condition, Q);
+
+  std::cout << "******************" << std::endl;
+  std::cout << "AcceleratedRSPlanner condition: " << condition << std::endl;
+  std::cout << "******************" << std::endl;
+  for (int i = 0; i < 5; ++i) {
+    std::cout << lengths_[condition - 1][i] << " ";
+  }
+
+  fromRSS[0] = from.x;
+  fromRSS[1] = from.y;
+  fromRSS[2] = from.theta;
+  toRSS[0] = to.x;
+  toRSS[1] = to.y;
+  toRSS[2] = to.theta;
+
+  ob::ReedsSheppStateSpace::ReedsSheppPath reedsSheppPath =
+      space->as<ob::ReedsSheppStateSpace>()->reedsShepp(fromRSS(), toRSS());
+  std::cout << "\n"
+            << reedsSheppPath.length_[0] << " " << reedsSheppPath.length_[1]
+            << " " << reedsSheppPath.length_[2] << " "
+            << reedsSheppPath.length_[3] << " " << reedsSheppPath.length_[4]
+            << std::endl;
+
+  std::cout << "******************" << std::endl;
+  std::cout << "AcceleratedRSPlanner path length: " << d_accelerated
+            << std::endl;
+  std::cout << "OMPL path length: " << reedsSheppPath.length() * r << std::endl;
+  State errors;
+  double d = 0;
+  acceleratedRSPlanner(from, to, d, r, condition, Q);
+  std::cout << "Condition: " << condition << std::endl;
+
+  char motionTypes[5] = {'N', 'N', 'N', 'N', 'N'};
+  getMotionTypes(condition, motionTypes);
+
+  std::cout << "Quadrant: " << Q << std::endl;
+  backProjectMotion(condition, Q, motionTypes);
+
+  std::vector<State> path;
+  path.push_back(from);
+
+  getPath(condition, motionTypes, path, r);
+  getErrors(path, to, errors);
+
+  std::cout << "Path: " << std::endl;
+  for (int i = 0; i < path.size(); ++i) {
+    std::cout << path[i].x << " " << path[i].y << " " << path[i].theta
+              << std::endl;
+  }
+
+  std::cout << "******************" << std::endl;
+  std::cout << "Errors: " << errors.x << " " << errors.y << " " << errors.theta
+            << std::endl;
+  double errors_norm = sqrt(errors.x * errors.x + errors.y * errors.y +
+                            errors.theta * errors.theta);
+  std::cout << "Errors norm ||end-start||: " << errors_norm << std::endl;
+
+  if (errors_norm > 1e-10) {
+    std::cout << "Error in validity check!" << std::endl;
+  }
+
+  // cast motion types to string
+  std::string motionTypesStr;
+  for (int i = 0; i < 5; ++i) {
+    motionTypesStr += motionTypes[i];
+  }
+  std::cout << "******************" << std::endl;
+  std::cout << "Drawing motion type: ";
+  for (int i = 0; i < motionTypesStr.size(); ++i) {
+    std::cout << motionTypesStr[i] << " ";
+  }
+  std::cout << std::endl;
+  std::cout << "******************" << std::endl;
+}
+
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
 void Solver::benchmarkPlanners() {
-  const int number_of_final_states = 10000000;
+  const int number_of_final_states = 1000000;
+  // std::random_device rd;
+  // std::mt19937 gen(rd());
+  // std::uniform_real_distribution<> r_dis(0.01, 10);
+  // const double r = r_dis(gen);
   const double r = 1;
 
   std::vector<State> toStates;
   toStates.reserve(number_of_final_states);
   const bool use_config = false;
-  helper_functions_.generateRandomStates(toStates, use_config);
+  helper_functions_.generateRandomStates(toStates, use_config, r);
 
   std::vector<double> distances_acceleratedRS(number_of_final_states);
   std::vector<double> distances_Desaulniers(number_of_final_states);
   std::vector<double> distances_OMPL(number_of_final_states);
 
-  const State from = {0, 0, pi - pi / 2};
+  const State from = {0, 0, pi / 2};
 
   // AcceleratedRS (Proposed)
   double d_accelerated = 0;
@@ -1089,7 +1191,7 @@ void Solver::computeAndDrawRandomPath(sf::RenderWindow &window) {
   backProjectMotion(condition, Q, motionTypes);
   std::vector<State> path;
   path.push_back(from);
-  getPath(condition, motionTypes, path);
+  getPath(condition, motionTypes, path, r);
   getErrors(path, to, errors);
   std::cout << "******************" << std::endl;
   std::cout << "Errors: " << errors.x << " " << errors.y << " " << errors.theta
@@ -1146,6 +1248,12 @@ void Solver::RandomPathsValidityChecks() {
   const bool use_config = true;
   const int number_of_final_states = config_.number_of_final_states;
   const double r = config_.r;
+  // const double r between 0 and config_.r
+  // std::random_device rd;
+  // std::mt19937 gen(rd());
+  // std::uniform_real_distribution<> r_dis(0.01, config_.r);
+  // double r = r_dis(gen);
+
   std::vector<State> toStates;
   toStates.reserve(number_of_final_states);
   helper_functions_.generateRandomStates(toStates, use_config);
@@ -1164,6 +1272,8 @@ void Solver::RandomPathsValidityChecks() {
               << ", " << fromStates[i].theta << "}" << std::endl;
     std::cout << "State_to: {" << toStates[i].x << ", " << toStates[i].y << ", "
               << toStates[i].theta << "}" << std::endl;
+    // r = r_dis(gen);
+    // std::cout << "State_radius: " << r << std::endl;
     from.x = fromStates[i].x;
     from.y = fromStates[i].y;
     from.theta = fromStates[i].theta;
@@ -1198,7 +1308,7 @@ void Solver::RandomPathsValidityChecks() {
               << std::endl;
 
     State errors;
-    validityCheck(from, toStates[i], condition, Q, errors);
+    validityCheck(from, toStates[i], condition, Q, errors, r);
     double errors_norm = sqrt(errors.x * errors.x + errors.y * errors.y +
                               errors.theta * errors.theta);
     std::cout << "Errors norm ||end-start||: " << errors_norm << std::endl;
@@ -1216,13 +1326,13 @@ void Solver::RandomPathsValidityChecks() {
 /*****************************************************************************/
 /*****************************************************************************/
 void Solver::validityCheck(const State &from, const State &to, const int cond,
-                           const int Q, State &errors) {
+                           const int Q, State &errors, const double r) {
   char motionTypes[5] = {'N', 'N', 'N', 'N', 'N'};
   getMotionTypes(cond, motionTypes);
   backProjectMotion(cond, Q, motionTypes);
   std::vector<State> path;
   path.push_back(from);
-  getPath(cond, motionTypes, path);
+  getPath(cond, motionTypes, path, r);
   getErrors(path, to, errors);
 }
 
@@ -1341,11 +1451,6 @@ void Solver::getMotionTypes(const int condition, char motionTypes[5]) const {
     motionTypes[3] = 'R';
     break;
   case 20:
-    motionTypes[0] = 'R';
-    motionTypes[1] = 'L';
-    motionTypes[2] = 'R';
-    break;
-  case 21:
     motionTypes[0] = 'L';
     motionTypes[1] = 'R';
     motionTypes[2] = 'L';
@@ -1392,11 +1497,10 @@ void Solver::backProjectMotion(const int condition, const int Q,
 /*****************************************************************************/
 /*****************************************************************************/
 void Solver::getPath(const int condition, char motionTypes[5],
-                     std::vector<State> &path) const {
+                     std::vector<State> &path, const double r) const {
   double x = path[0].x;
   double y = path[0].y;
   double t = path[0].theta;
-  const double r = config_.r;
   for (int k = 0; k < 5; ++k) {
     char motionType = motionTypes[k];
     double motionLength = fabs(lengths_[condition - 1][k]);
@@ -1451,17 +1555,17 @@ void Solver::getErrors(const std::vector<State> &path, const State &to,
 /*****************************************************************************/
 /*****************************************************************************/
 void Solver::characterizeVariability() {
-  const int number_of_final_states = 100000000;
+  const int number_of_final_states = 100000;
   std::vector<State> toStates;
   toStates.reserve(number_of_final_states);
   const bool use_config = true;
   helper_functions_.generateRandomStates(toStates, use_config);
 
-  std::vector<std::vector<State>> stateCategory(21);
+  std::vector<std::vector<State>> stateCategory(20);
   const State from = {0, 0, 0};
 
   const double r = 400;
-  // Catergorize the final states into 21 categories
+  // Catergorize the final states into 20 categories
   double d_accelerated = 0;
   State to;
   int Q, condition;
@@ -1474,7 +1578,7 @@ void Solver::characterizeVariability() {
   }
 
   // Display number of states in each category
-  for (int i = 0; i < 21; ++i) {
+  for (int i = 0; i < 20; ++i) {
     std::cout << "Category " << i + 1 << " has " << stateCategory[i].size()
               << " states" << std::endl;
   }
@@ -1483,7 +1587,7 @@ void Solver::characterizeVariability() {
   std::vector<double> distances_acceleratedRS(number_of_final_states);
   std::vector<double> distances_OMPL(number_of_final_states);
 
-  std::vector<double> time_accelerated(21);
+  std::vector<double> time_accelerated(20);
 
   ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(r));
   ob::ScopedState<> fromOMPL(space), toOMPL(space);
@@ -1492,8 +1596,8 @@ void Solver::characterizeVariability() {
   fromOMPL[2] = from.theta;
   double d_OMPL = 0;
 
-  std::vector<double> time_OMPL(21);
-  for (int i = 0; i < 21; ++i) {
+  std::vector<double> time_OMPL(20);
+  for (int i = 0; i < 20; ++i) {
 
     auto start_accelerated = std::chrono::high_resolution_clock::now();
     for (int j = 0; j < stateCategory[i].size(); ++j) {
@@ -1521,24 +1625,25 @@ void Solver::characterizeVariability() {
     time_OMPL[i] = duration_OMPL;
 
     // display error stats for each category
-    // std::cout << "Distance error for category " << i + 1 << std::endl;
-    // helper_functions_.errorStats(distances_acceleratedRS, distances_OMPL);
+    std::cout << "Distance error for category " << i + 1 << std::endl;
+    helper_functions_.errorStats(distances_acceleratedRS, distances_OMPL);
   }
 
   // Display the time speedup for each category
-  for (int i = 0; i < 21; ++i) {
-    std::cout << "Category " << i + 1 << " has a time speedup of "
-              << time_OMPL[i] / time_accelerated[i] << std::endl;
-  }
+  // for (int i = 0; i < 20; ++i) {
+  //   std::cout << "Category " << i + 1 << " has a time speedup of "
+  //             << time_OMPL[i] / time_accelerated[i] << std::endl;
+  // }
 
   // Save the number of states in each category, the time for each category for
   // each method and the speedup
-  std::ofstream file;
-  file.open("variability.txt");
-  for (int i = 0; i < 21; ++i) {
-    file << stateCategory[i].size() << " " << time_accelerated[i] << " "
-         << time_OMPL[i] << " " << time_OMPL[i] / time_accelerated[i] << "\n";
-  }
+  // std::ofstream file;
+  // file.open("variability.txt");
+  // for (int i = 0; i < 20; ++i) {
+  //   file << stateCategory[i].size() << " " << time_accelerated[i] << " "
+  //        << time_OMPL[i] << " " << time_OMPL[i] / time_accelerated[i] <<
+  //        "\n";
+  // }
 }
 
 } // namespace accelerated
