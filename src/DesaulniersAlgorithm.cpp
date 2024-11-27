@@ -9,8 +9,8 @@ namespace accelerated {
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-const double DesaulniersAlgorithm::getDistance(double xf, double yf,
-                                               double thetaf) const {
+double DesaulniersAlgorithm::getDistance(double xf, double yf,
+                                         double thetaf) const {
   // Algorithm Step 1
   thetaf = wrapTo2Pi(thetaf);
   double cx = xf + cos(thetaf);
@@ -18,12 +18,11 @@ const double DesaulniersAlgorithm::getDistance(double xf, double yf,
 
   // Algorithm Step 2
   const bool q1 = (cx > 1 && cy >= 0);
-  const bool q2 = (cx <= 1 && cy >= 0);
+  // const bool q2 = (cx <= 1 && cy >= 0);
   const bool q3 = (cx <= 1 && cy < 0);
   const bool q4 = (cx > 1 && cy < 0);
   if (q1) {
     xf = -xf;
-    yf = yf;
     thetaf = 2 * pi - thetaf;
   } else if (q3) {
     yf = -yf;
@@ -83,7 +82,7 @@ const double DesaulniersAlgorithm::getDistance(double xf, double yf,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::wrapToPi(double angle) const {
+inline double DesaulniersAlgorithm::wrapToPi(double angle) const {
   angle = fmod(angle + pi, 2 * pi);
   if (angle < 0) {
     angle += 2 * pi;
@@ -94,7 +93,7 @@ inline const double DesaulniersAlgorithm::wrapToPi(double angle) const {
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::wrapTo2Pi(double angle) const {
+inline double DesaulniersAlgorithm::wrapTo2Pi(double angle) const {
   angle = fmod(angle, 2 * pi);
   if (angle < 0) {
     angle += 2 * pi;
@@ -105,8 +104,8 @@ inline const double DesaulniersAlgorithm::wrapTo2Pi(double angle) const {
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const int DesaulniersAlgorithm::getRegion(const double x,
-                                                 const double y) const {
+inline int DesaulniersAlgorithm::getRegion(const double x,
+                                           const double y) const {
   if (x <= -1) {
     // R1, R2, R5, R6, R7, R8, R9, R10, R11
     if (y >= 2) {
@@ -289,15 +288,15 @@ inline void DesaulniersAlgorithm::getType(const double cx, const double cy,
       T1 = 8;
     } else if (thetaf >= theta2(cx, cy) && thetaf < theta3(cx, cy)) {
       T1 = 18;
-    } else if (thetaf > theta3(cx, cy) && thetaf <= theta9(cx, cy)) {
+    } else if (thetaf > theta3(cx, cy) && thetaf <= theta9(cx)) {
       T1 = 19;
-    } else if (thetaf > theta9(cx, cy) && thetaf <= theta10(cx, cy)) {
+    } else if (thetaf > theta9(cx) && thetaf <= theta10(cx, cy)) {
       T1 = 21;
     } else if (thetaf > theta10(cx, cy) && thetaf <= theta11(cx, cy)) {
       T1 = 22;
-    } else if (thetaf > theta11(cx, cy) && thetaf <= theta12(cx, cy)) {
+    } else if (thetaf > theta11(cx, cy) && thetaf <= theta12(cx)) {
       T1 = 24;
-    } else if (thetaf > theta12(cx, cy) && thetaf < 2 * pi) {
+    } else if (thetaf > theta12(cx) && thetaf < 2 * pi) {
       T1 = 25;
     }
     break;
@@ -310,15 +309,15 @@ inline void DesaulniersAlgorithm::getType(const double cx, const double cy,
       T1 = 10;
     } else if (thetaf > theta7(cx, cy) && thetaf <= theta8(cx, cy)) {
       T1 = 13;
-    } else if (thetaf > theta8(cx, cy) && thetaf <= theta9(cx, cy)) {
+    } else if (thetaf > theta8(cx, cy) && thetaf <= theta9(cx)) {
       T1 = 19;
-    } else if (thetaf > theta9(cx, cy) && thetaf <= theta10(cx, cy)) {
+    } else if (thetaf > theta9(cx) && thetaf <= theta10(cx, cy)) {
       T1 = 21;
     } else if (thetaf > theta10(cx, cy) && thetaf <= theta11(cx, cy)) {
       T1 = 22;
-    } else if (thetaf > theta11(cx, cy) && thetaf <= theta12(cx, cy)) {
+    } else if (thetaf > theta11(cx, cy) && thetaf <= theta12(cx)) {
       T1 = 24;
-    } else if (thetaf > theta12(cx, cy) && thetaf < 2 * pi) {
+    } else if (thetaf > theta12(cx) && thetaf < 2 * pi) {
       T1 = 25;
     }
     break;
@@ -331,9 +330,9 @@ inline void DesaulniersAlgorithm::getType(const double cx, const double cy,
       T1 = 9;
     } else if (thetaf > theta14(cx, cy) && thetaf < theta15(cx, cy)) {
       T1 = 14;
-    } else if (thetaf >= theta15(cx, cy) && thetaf < theta16(cx, cy)) {
+    } else if (thetaf >= theta15(cx, cy) && thetaf < theta16(cy)) {
       T1 = 17;
-    } else if (thetaf >= theta16(cx, cy) && thetaf <= theta4(cx, cy)) {
+    } else if (thetaf >= theta16(cy) && thetaf <= theta4(cx, cy)) {
       T1 = 19;
     } else if (thetaf > theta4(cx, cy) && thetaf <= theta5(cx, cy)) {
       T1 = 20;
@@ -354,9 +353,9 @@ inline void DesaulniersAlgorithm::getType(const double cx, const double cy,
       T1 = 15;
     } else if (thetaf > theta19(cx, cy) && thetaf < theta20(cx, cy)) {
       T1 = 16;
-    } else if (thetaf >= theta20(cx, cy) && thetaf < theta16(cx, cy)) {
+    } else if (thetaf >= theta20(cx, cy) && thetaf < theta16(cy)) {
       T1 = 17;
-    } else if (thetaf >= theta16(cx, cy) && thetaf <= theta4(cx, cy)) {
+    } else if (thetaf >= theta16(cy) && thetaf <= theta4(cx, cy)) {
       T1 = 19;
     } else if (thetaf > theta4(cx, cy) && thetaf <= theta5(cx, cy)) {
       T1 = 20;
@@ -395,16 +394,16 @@ inline void DesaulniersAlgorithm::getType(const double cx, const double cy,
     } else if (thetaf > theta17(cx, cy) && thetaf < theta18(cx, cy)) {
       T1 = 11;
       T2 = 12;
-    } else if (thetaf >= theta18(cx, cy) && thetaf <= theta23(cx, cy)) {
+    } else if (thetaf >= theta18(cx, cy) && thetaf <= theta23(cy)) {
       T1 = 12;
       T2 = 15;
-    } else if (thetaf > theta23(cx, cy) && thetaf <= theta19(cx, cy)) {
+    } else if (thetaf > theta23(cy) && thetaf <= theta19(cx, cy)) {
       T1 = 15;
     } else if (thetaf > theta19(cx, cy) && thetaf < theta20(cx, cy)) {
       T1 = 16;
-    } else if (thetaf >= theta20(cx, cy) && thetaf < theta16(cx, cy)) {
+    } else if (thetaf >= theta20(cx, cy) && thetaf < theta16(cy)) {
       T1 = 17;
-    } else if (thetaf >= theta16(cx, cy) && thetaf <= theta4(cx, cy)) {
+    } else if (thetaf >= theta16(cy) && thetaf <= theta4(cx, cy)) {
       T1 = 19;
     } else if (thetaf > theta4(cx, cy) && thetaf <= theta5(cx, cy)) {
       T1 = 20;
@@ -422,10 +421,10 @@ inline void DesaulniersAlgorithm::getType(const double cx, const double cy,
     } else if (thetaf > theta17(cx, cy) && thetaf < theta18(cx, cy)) {
       T1 = 11;
       T2 = 12;
-    } else if (thetaf >= theta18(cx, cy) && thetaf <= theta23(cx, cy)) {
+    } else if (thetaf >= theta18(cx, cy) && thetaf <= theta23(cy)) {
       T1 = 12;
       T2 = 15;
-    } else if (thetaf > theta23(cx, cy) && thetaf <= theta19(cx, cy)) {
+    } else if (thetaf > theta23(cy) && thetaf <= theta19(cx, cy)) {
       T1 = 15;
     } else if (thetaf > theta19(cx, cy) && thetaf <= theta21(cx, cy)) {
       T1 = 16;
@@ -445,10 +444,10 @@ inline void DesaulniersAlgorithm::getType(const double cx, const double cy,
     } else if (thetaf >= theta6(cx, cy) && thetaf < theta24(cx, cy)) {
       T1 = 10;
       T2 = 12;
-    } else if (thetaf >= theta24(cx, cy) && thetaf <= theta23(cx, cy)) {
+    } else if (thetaf >= theta24(cx, cy) && thetaf <= theta23(cy)) {
       T1 = 12;
       T2 = 15;
-    } else if (thetaf > theta23(cx, cy) && thetaf <= theta19(cx, cy)) {
+    } else if (thetaf > theta23(cy) && thetaf <= theta19(cx, cy)) {
       T1 = 15;
     } else if (thetaf > theta19(cx, cy) && thetaf <= theta21(cx, cy)) {
       T1 = 16;
@@ -488,15 +487,15 @@ inline void DesaulniersAlgorithm::getType(const double cx, const double cy,
       T2 = 12;
     } else if (thetaf >= theta25(cx, cy) && thetaf <= theta21(cx, cy)) {
       T1 = 13;
-    } else if (thetaf > theta21(cx, cy) && thetaf <= theta9(cx, cy)) {
+    } else if (thetaf > theta21(cx, cy) && thetaf <= theta9(cx)) {
       T1 = 19;
-    } else if (thetaf > theta9(cx, cy) && thetaf <= theta10(cx, cy)) {
+    } else if (thetaf > theta9(cx) && thetaf <= theta10(cx, cy)) {
       T1 = 21;
     } else if (thetaf > theta10(cx, cy) && thetaf <= theta11(cx, cy)) {
       T1 = 22;
-    } else if (thetaf > theta11(cx, cy) && thetaf <= theta12(cx, cy)) {
+    } else if (thetaf > theta11(cx, cy) && thetaf <= theta12(cx)) {
       T1 = 24;
-    } else if (thetaf > theta12(cx, cy) && thetaf < 2 * pi) {
+    } else if (thetaf > theta12(cx) && thetaf < 2 * pi) {
       T1 = 25;
     }
     break;
@@ -509,9 +508,9 @@ inline void DesaulniersAlgorithm::getType(const double cx, const double cy,
       T1 = 6;
     } else if (thetaf >= theta28(cx, cy) && thetaf <= theta20(cx, cy)) {
       T1 = 23;
-    } else if (thetaf > theta20(cx, cy) && thetaf <= theta12(cx, cy)) {
+    } else if (thetaf > theta20(cx, cy) && thetaf <= theta12(cx)) {
       T1 = 24;
-    } else if (thetaf > theta12(cx, cy) && thetaf < theta29(cx, cy)) {
+    } else if (thetaf > theta12(cx) && thetaf < theta29(cx, cy)) {
       T1 = 25;
     } else if (thetaf > theta29(cx, cy) && thetaf < 2 * pi) {
       T1 = 26;
@@ -575,9 +574,9 @@ inline void DesaulniersAlgorithm::getType(const double cx, const double cy,
       T1 = 6;
     } else if (thetaf >= theta28(cx, cy) && thetaf <= theta20(cx, cy)) {
       T1 = 23;
-    } else if (thetaf > theta20(cx, cy) && thetaf <= theta12(cx, cy)) {
+    } else if (thetaf > theta20(cx, cy) && thetaf <= theta12(cx)) {
       T1 = 24;
-    } else if (thetaf > theta12(cx, cy) && thetaf < theta29(cx, cy)) {
+    } else if (thetaf > theta12(cx) && thetaf < theta29(cx, cy)) {
       T1 = 25;
     } else if (thetaf > theta29(cx, cy) && thetaf < 2 * pi) {
       T1 = 26;
@@ -596,9 +595,9 @@ inline void DesaulniersAlgorithm::getType(const double cx, const double cy,
       T1 = 6;
     } else if (thetaf >= theta28(cx, cy) && thetaf <= theta20(cx, cy)) {
       T1 = 23;
-    } else if (thetaf > theta20(cx, cy) && thetaf <= theta12(cx, cy)) {
+    } else if (thetaf > theta20(cx, cy) && thetaf <= theta12(cx)) {
       T1 = 24;
-    } else if (thetaf > theta12(cx, cy) && thetaf < theta29(cx, cy)) {
+    } else if (thetaf > theta12(cx) && thetaf < theta29(cx, cy)) {
       T1 = 25;
     } else if (thetaf > theta29(cx, cy) && thetaf < 2 * pi) {
       T1 = 26;
@@ -627,32 +626,28 @@ inline void DesaulniersAlgorithm::getType(const double cx, const double cy,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::D1(const double cx,
-                                             const double cy) const {
+inline double DesaulniersAlgorithm::D1(const double cx, const double cy) const {
   return sqrt((cx - 1) * (cx - 1) + cy * cy);
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::D2(const double cx,
-                                             const double cy) const {
+inline double DesaulniersAlgorithm::D2(const double cx, const double cy) const {
   return sqrt((cx + 1) * (cx + 1) + cy * cy);
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::D3(const double cx,
-                                             const double cy) const {
+inline double DesaulniersAlgorithm::D3(const double cx, const double cy) const {
   return sqrt((cx - 3) * (cx - 3) + cy * cy);
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::K(const double cx,
-                                            const double cy) const {
+inline double DesaulniersAlgorithm::K(const double cx, const double cy) const {
   return D1(cx, cy) * D1(cx, cy) + 4 -
          16 * (sin(F3(D2(cx, cy), cx + 1, cy, 4) / 2) *
                sin(F3(D2(cx, cy), cx + 1, cy, 4) / 2));
@@ -661,35 +656,31 @@ inline const double DesaulniersAlgorithm::K(const double cx,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::F1(const double a, const double b,
-                                             const double c,
-                                             const double d) const {
+inline double DesaulniersAlgorithm::F1(const double a, const double b,
+                                       const double c, const double d) const {
   return acos((a * b + c * sqrt(d * d - a * a)) / (d * d));
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::F2(const double a, const double b,
-                                             const double c,
-                                             const double d) const {
+inline double DesaulniersAlgorithm::F2(const double a, const double b,
+                                       const double c, const double d) const {
   return acos((a * b + c * sqrt(4 * d * d - a * a)) / (d * d));
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::F3(const double a, const double b,
-                                             const double c,
-                                             const double d) const {
+inline double DesaulniersAlgorithm::F3(const double a, const double b,
+                                       const double c, const double d) const {
   return acos((a * b + c * sqrt(d * d - a * a)) / (a * d));
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::Q1(const double cx,
-                                             const double cy) const {
+inline double DesaulniersAlgorithm::Q1(const double cx, const double cy) const {
   return (cx - 1) / 2 +
          (cy * sqrt(16 - D2(cx, cy) * D2(cx, cy))) / (2 * D2(cx, cy));
 }
@@ -697,8 +688,7 @@ inline const double DesaulniersAlgorithm::Q1(const double cx,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::Q2(const double cx,
-                                             const double cy) const {
+inline double DesaulniersAlgorithm::Q2(const double cx, const double cy) const {
   return (cx - 1) / 2 -
          (cy * sqrt(16 - D2(cx, cy) * D2(cx, cy))) / (2 * D2(cx, cy));
 }
@@ -862,16 +852,16 @@ inline void DesaulniersAlgorithm::eq8_11(const double x, const double y,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta1(const double cx,
-                                                 const double cy) const {
+inline double DesaulniersAlgorithm::theta1(const double cx,
+                                           const double cy) const {
   return pi / 2 - asin(cy / D1(cx, cy));
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta2(const double cx,
-                                                 const double cy) const {
+inline double DesaulniersAlgorithm::theta2(const double cx,
+                                           const double cy) const {
   return theta3(cx, cy) -
          F1(2 * cos(F1(2, cx + 1, cy, D2(cx, cy))) - 1, cy, 1 - cx, D1(cx, cy));
 }
@@ -879,40 +869,40 @@ inline const double DesaulniersAlgorithm::theta2(const double cx,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta3(const double cx,
-                                                 const double cy) const {
+inline double DesaulniersAlgorithm::theta3(const double cx,
+                                           const double cy) const {
   return pi / 2 + F1(2, cx + 1, cy, D2(cx, cy));
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta4(const double cx,
-                                                 const double cy) const {
+inline double DesaulniersAlgorithm::theta4(const double cx,
+                                           const double cy) const {
   return 3 * pi / 2 - asin(cy / D2(cx, cy));
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta5(const double cx,
-                                                 const double cy) const {
+inline double DesaulniersAlgorithm::theta5(const double cx,
+                                           const double cy) const {
   return theta4(cx, cy) + pi / 2;
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta6(const double cx,
-                                                 const double cy) const {
+inline double DesaulniersAlgorithm::theta6(const double cx,
+                                           const double cy) const {
   return F2(D1(cx, cy) * D1(cx, cy) - 4, cx - 1, cy, 2 * D1(cx, cy));
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta7(const double cx,
-                                                 const double cy) const {
+inline double DesaulniersAlgorithm::theta7(const double cx,
+                                           const double cy) const {
   return pi + F3(D2(cx, cy), cx + 1, cy, 4) -
          F2(K(cx, cy), 1 - cx, -cy, 2 * D1(cx, cy)) - 2 * asin(D2(cx, cy) / 4);
 }
@@ -920,72 +910,69 @@ inline const double DesaulniersAlgorithm::theta7(const double cx,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta8(const double cx,
-                                                 const double cy) const {
+inline double DesaulniersAlgorithm::theta8(const double cx,
+                                           const double cy) const {
   return theta7(cx, cy) + F2(K(cx, cy), 1 - cx, -cy, 2 * D1(cx, cy));
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta9(const double cx,
-                                                 const double cy) const {
+inline double DesaulniersAlgorithm::theta9(const double cx) const {
   return pi - acos((1 - cx) / 2);
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta10(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta10(const double cx,
+                                            const double cy) const {
   return pi - F1(2, 1 - cx, cy, D1(cx, cy));
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta11(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta11(const double cx,
+                                            const double cy) const {
   return theta10(cx, cy) + pi / 2;
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta12(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta12(const double cx) const {
   return 3 * pi / 2 + asin((cx + 1) / 2);
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta13(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta13(const double cx,
+                                            const double cy) const {
   return pi - F1(2, -cy, 1 - cx, D1(cx, cy));
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta14(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta14(const double cx,
+                                            const double cy) const {
   return pi - 2 * asin(cy / D1(cx, cy));
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta15(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta15(const double cx,
+                                            const double cy) const {
   return theta14(cx, cy) + F1(2, -cy, 1 - cx, D1(cx, cy));
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta16(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta16(const double cy) const {
   double input = (2 - cy) / 2;
   if (input > 1.0) {
     input = 1.0; // Limit input to maximum value if it exceeds 1
@@ -998,8 +985,8 @@ inline const double DesaulniersAlgorithm::theta16(const double cx,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta17(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta17(const double cx,
+                                            const double cy) const {
   return pi - acos((12 + D1(cx, cy) * D1(cx, cy)) / (8 * D1(cx, cy))) -
          asin(cy / D1(cx, cy));
 }
@@ -1007,16 +994,16 @@ inline const double DesaulniersAlgorithm::theta17(const double cx,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta18(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta18(const double cx,
+                                            const double cy) const {
   return pi - 2 * asin(cy / D1(cx, cy));
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta19(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta19(const double cx,
+                                            const double cy) const {
   return theta17(cx, cy) +
          2 * acos((12 + D1(cx, cy) * D1(cx, cy)) / (8 * D1(cx, cy)));
 }
@@ -1024,16 +1011,16 @@ inline const double DesaulniersAlgorithm::theta19(const double cx,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta20(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta20(const double cx,
+                                            const double cy) const {
   return pi + F2(D1(cx, cy) * D1(cx, cy) - 4, 1 - cx, cy, 2 * D1(cx, cy));
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta21(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta21(const double cx,
+                                            const double cy) const {
   return pi + F2(D2(cx, cy) * D2(cx, cy), cx + 1, cy, 2 * D2(cx, cy)) -
          2 * asin(D2(cx, cy) / 4);
 }
@@ -1041,48 +1028,47 @@ inline const double DesaulniersAlgorithm::theta21(const double cx,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta23(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta23(const double cy) const {
   return pi - asin(cy / 2);
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta24(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta24(const double cx,
+                                            const double cy) const {
   return theta19(cx, cy) - acos((20 - D1(cx, cy) * D1(cx, cy)) / 16);
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta25(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta25(const double cx,
+                                            const double cy) const {
   return theta21(cx, cy) - 2 * asin(D2(cx, cy) / 4);
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta26(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta26(const double cx,
+                                            const double cy) const {
   return acos((cx - Q1(cx, cy)) / 2);
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta27(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta27(const double cx,
+                                            const double cy) const {
   return theta26(cx, cy) + 2 * asin(D2(cx, cy) / 4);
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta28(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta28(const double cx,
+                                            const double cy) const {
   return pi + asin((2 * sin(F2(D3(cx, cy) * D3(cx, cy), 3 - cx, -cy,
                                2 * D3(cx, cy))) -
                     cy) /
@@ -1092,32 +1078,32 @@ inline const double DesaulniersAlgorithm::theta28(const double cx,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta29(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta29(const double cx,
+                                            const double cy) const {
   return pi + acos((Q2(cx, cy) - cx) / 2);
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta30(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta30(const double cx,
+                                            const double cy) const {
   return pi + F2(D1(cx, cy) * D1(cx, cy) - 4, 1 - cx, -cy, 2 * D1(cx, cy));
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta31(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta31(const double cx,
+                                            const double cy) const {
   return pi - asin(cy / D1(cx, cy)) - acos((2 + D1(cx, cy)) / 4);
 }
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double DesaulniersAlgorithm::theta33(const double cx,
-                                                  const double cy) const {
+inline double DesaulniersAlgorithm::theta33(const double cx,
+                                            const double cy) const {
   return theta31(cx, cy) + acos((2 + D1(cx, cy)) / 4);
 }
 
