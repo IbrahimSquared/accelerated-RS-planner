@@ -35,9 +35,8 @@ private:
   void setA(const double x, const double y, const double thetaf, const double r,
             const double beta0, int &cond, double &d, const double xn,
             const double x0, const double yn);
-  void setB(const double x, const double y, const double thetaf,
-            const double xn, const double yn, const double r, int &cond,
-            double &d, const double beta0);
+  void setB(const double x, const double y, const double thetaf, const double r,
+            int &cond, double &d, const double beta0);
 
   // Forward simulate the path & check if it reaches the final config
   void validityCheck(const State &from, const State &to, const int cond,
@@ -56,11 +55,10 @@ private:
 
   void computeAndDrawRandomPath(sf::RenderWindow &window);
 
-  inline const double wrapToPi(const double angle) const;
-  inline const double wrapTo2Pi(const double angle) const;
-  inline const double euclideanDistance(const double x1, const double y1,
-                                        const double x2,
-                                        const double y2) const {
+  inline double wrapToPi(const double angle) const;
+  inline double wrapTo2Pi(const double angle) const;
+  inline double euclideanDistance(const double x1, const double y1,
+                                  const double x2, const double y2) const {
     return sqrt((x1 - x2) * (x1 - x2) + (y1 - y2) * (y1 - y2));
   }
 

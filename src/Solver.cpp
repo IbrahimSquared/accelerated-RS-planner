@@ -17,7 +17,7 @@ namespace accelerated {
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double Solver::wrapToPi(double angle) const {
+inline double Solver::wrapToPi(double angle) const {
   angle = fmod(angle + pi, 2 * pi);
   if (angle < 0) {
     angle += 2 * pi;
@@ -28,7 +28,7 @@ inline const double Solver::wrapToPi(double angle) const {
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-inline const double Solver::wrapTo2Pi(double angle) const {
+inline double Solver::wrapTo2Pi(double angle) const {
   angle = fmod(angle + 2 * pi, 2 * pi);
   if (angle < 0) {
     angle += 2 * pi;
@@ -231,7 +231,7 @@ inline void Solver::P9(const double x, const double y, const double thetaf,
   const double xi = -x + sin(thetaf);
   const double eta = -y - 1 - cos(thetaf);
   const double rho = xi * xi + eta * eta;
-  const double phi = atan2(eta, xi);
+  // const double phi = atan2(eta, xi);
   double t, u;
   u = 4 - sqrt(rho - 4);
   t = wrapToPi(atan2((4 - u) * xi - 2 * eta, -2 * xi + (u - 4) * eta));
@@ -551,7 +551,6 @@ void Solver::setA(const double x, const double y, const double thetaf,
 
       // 1 , 9, 10
       // 1
-      double u;
       if (cfRx_ >= 2 * r + x0 || cfRy_ <= c0Ly_) {
         // CSC | +L+S+R
         P1(x, y, thetaf, d);
@@ -605,7 +604,6 @@ void Solver::setA(const double x, const double y, const double thetaf,
   // }
 
   // thetaf < 0
-  double u;
   // 5, 6, 12
   if (thetaf < 2 * beta0 - pi) {
     // 6
@@ -662,8 +660,7 @@ void Solver::setA(const double x, const double y, const double thetaf,
 /*****************************************************************************/
 /*****************************************************************************/
 void Solver::setB(const double x, const double y, const double thetaf,
-                  const double xn, const double yn, const double r, int &cond,
-                  double &d, const double beta0) {
+                  const double r, int &cond, double &d, const double beta0) {
   // 9, 12
   if (RL >= sqrt(20) * r) {
     // const double RfL0 = atan2(cfRy_ - c0Ly_, cfRx_ - c0Lx_);
@@ -928,7 +925,7 @@ void Solver::acceleratedRSPlanner(const State &from, const State &to, double &d,
 
   // Main Algorithm (4)
   if (pred_1 || pred_2 || pred_3) {
-    setB(x, y, thetaf, xn, yn, r, cond, d, beta0);
+    setB(x, y, thetaf, r, cond, d, beta0);
     return;
   } else {
     setA(x, y, thetaf, r, beta0, cond, d, x0, xn, yn);
@@ -1002,7 +999,7 @@ void Solver::evaluateQuery(const State &from, const State &to,
   getErrors(path, to, errors);
 
   std::cout << "Path: " << std::endl;
-  for (int i = 0; i < path.size(); ++i) {
+  for (size_t i = 0; i < path.size(); ++i) {
     std::cout << path[i].x << " " << path[i].y << " " << path[i].theta
               << std::endl;
   }
@@ -1025,7 +1022,7 @@ void Solver::evaluateQuery(const State &from, const State &to,
   }
   std::cout << "******************" << std::endl;
   std::cout << "Drawing motion type: ";
-  for (int i = 0; i < motionTypesStr.size(); ++i) {
+  for (size_t i = 0; i < motionTypesStr.size(); ++i) {
     std::cout << motionTypesStr[i] << " ";
   }
   std::cout << std::endl;
@@ -1210,8 +1207,7 @@ void Solver::computeAndDrawRandomPath(sf::RenderWindow &window) {
       lengths_[condition - 1][0], lengths_[condition - 1][1],
       lengths_[condition - 1][2], lengths_[condition - 1][3],
       lengths_[condition - 1][4]};
-  plotter.draw(window, from, to, path, motionTypesVector, motionLengths,
-               condition);
+  plotter.draw(window, to, path, motionTypesVector);
 }
 
 /*****************************************************************************/
@@ -1602,7 +1598,7 @@ void Solver::characterizeVariability() {
   for (int i = 0; i < 20; ++i) {
 
     auto start_accelerated = std::chrono::high_resolution_clock::now();
-    for (int j = 0; j < stateCategory[i].size(); ++j) {
+    for (size_t j = 0; j < stateCategory[i].size(); ++j) {
       to.x = stateCategory[i][j].x;
       to.y = stateCategory[i][j].y;
       to.theta = stateCategory[i][j].theta;
@@ -1615,7 +1611,7 @@ void Solver::characterizeVariability() {
     time_accelerated[i] = duration_accelerated;
 
     auto start_OMPL = std::chrono::high_resolution_clock::now();
-    for (int j = 0; j < stateCategory[i].size(); ++j) {
+    for (size_t j = 0; j < stateCategory[i].size(); ++j) {
       toOMPL[0] = stateCategory[i][j].x;
       toOMPL[1] = stateCategory[i][j].y;
       toOMPL[2] = stateCategory[i][j].theta;
@@ -1655,7 +1651,6 @@ void Solver::characterizeVariability() {
   }
   double weighted_speedup = total_time_OMPL / total_time_accelerated;
   std::cout << "Weighted speedup: " << weighted_speedup << std::endl;
-
 }
 
 } // namespace accelerated
