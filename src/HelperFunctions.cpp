@@ -143,7 +143,7 @@ void HelperFunctions::errorStats(
   double avg_error_Desaulniers = 0.0;
   double max_error_accelerated = 0.0;
   double max_error_Desaulniers = 0.0;
-  for (int i = 0; i < distances_OMPL.size(); i++) {
+  for (size_t i = 0; i < distances_OMPL.size(); i++) {
     double error_accelerated =
         std::abs(distances_acceleratedRS[i] - distances_OMPL[i]);
     double error_Desaulniers =
@@ -178,7 +178,7 @@ void HelperFunctions::errorStats(
 
   double avg_error_accelerated = 0.0;
   double max_error_accelerated = 0.0;
-  for (int i = 0; i < distances_OMPL.size(); i++) {
+  for (size_t i = 0; i < distances_OMPL.size(); i++) {
     double error_accelerated =
         std::abs(distances_acceleratedRS[i] - distances_OMPL[i]);
     avg_error_accelerated += error_accelerated;
