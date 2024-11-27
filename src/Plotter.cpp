@@ -17,11 +17,9 @@ Plotter &Plotter::getInstance() {
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-void Plotter::draw(sf::RenderWindow &window, const State &from, const State &to,
+void Plotter::draw(sf::RenderWindow &window, const State &to,
                    const std::vector<State> &path,
-                   const std::vector<char> &motionTypes,
-                   const std::vector<double> motionLengths,
-                   const int condition) const {
+                   const std::vector<char> &motionTypes) const {
 
   const double min_x = config_.min_x;
   const double max_x = config_.max_x;
@@ -95,7 +93,7 @@ void Plotter::draw(sf::RenderWindow &window, const State &from, const State &to,
 
   std::cout << "******************" << std::endl;
   std::cout << "Drawing motion type: ";
-  for (int i = 0; i < motionTypes.size(); ++i) {
+  for (size_t i = 0; i < motionTypes.size(); ++i) {
     std::cout << motionTypes[i] << " ";
   }
   std::cout << std::endl;
@@ -103,7 +101,7 @@ void Plotter::draw(sf::RenderWindow &window, const State &from, const State &to,
 
   // Draw path
   for (size_t i = 0; i < path.size(); ++i) {
-    int motionDirection = (motionLengths[i] > 0) ? 1 : -1;
+    // int motionDirection = (motionLengths[i] > 0) ? 1 : -1;
     if (motionTypes[i] == 'S') {
       sf::Vertex line[] = {
           sf::Vertex(sf::Vector2f((path[i].x - min_x) * xScale,

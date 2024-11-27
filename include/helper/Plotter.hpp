@@ -10,10 +10,9 @@ namespace accelerated {
 class Plotter {
 public:
   static Plotter &getInstance();
-  void draw(sf::RenderWindow &window, const State &from, const State &to,
+  void draw(sf::RenderWindow &window, const State &to,
             const std::vector<State> &path,
-            const std::vector<char> &motionTypes,
-            const std::vector<double> motionLengths, const int condition) const;
+            const std::vector<char> &motionTypes) const;
 
   Plotter(Plotter const &) = delete;
   void operator=(Plotter const &) = delete;
