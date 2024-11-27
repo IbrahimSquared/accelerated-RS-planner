@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 # Set the build type to Release by default
-set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -fexpensive-optimizations -mfpmath=sse -fno-trapping-math -fno-math-errno -flto=auto -std=c++20 -D_USE_MATH_DEFINES")
+set(CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS_RELEASE} -O3 -Wall -Wpedantic -Wextra -Wnull-dereference -fexpensive-optimizations -mfpmath=sse -fno-trapping-math -fno-math-errno -flto=auto -std=c++20 -D_USE_MATH_DEFINES")
 
 # Set the default build type to Release if not specified
 if(NOT CMAKE_BUILD_TYPE)
