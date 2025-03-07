@@ -522,7 +522,7 @@ void Solver::setA(const double x, const double y, const double thetaf,
       double t2 = (c0Rx_ - xn) * cos(thetaf) + (c0Ry_ - yn) * sin(thetaf);
       const double t2x = t2 * cos(thetaf) + xn;
       const double t2y = t2 * sin(thetaf) + yn;
-      const double d1 = euclideanDistance(t2x, t2y, c0Rx_, c0Ry_);
+      const float d1 = euclideanDistance(t2x, t2y, c0Rx_, c0Ry_);
       if (t2 <= -2 * r || d1 <= r) {
         // P7
         P7(x, y, thetaf, d);
@@ -1033,7 +1033,7 @@ void Solver::evaluateQuery(const State &from, const State &to,
 /*****************************************************************************/
 /*****************************************************************************/
 void Solver::benchmarkPlanners() {
-  const int number_of_final_states = 1000000;
+  const int number_of_final_states = 10000000;
   // std::random_device rd;
   // std::mt19937 gen(rd());
   // std::uniform_real_distribution<> r_dis(0.01, 10);
