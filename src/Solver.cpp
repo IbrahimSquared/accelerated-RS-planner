@@ -869,10 +869,10 @@ void Solver::acceleratedRSPlanner(const State &from, const State &to, double &d,
                                   const double r, int &cond, int &Q) {
   const double x0 = from.x;
   const double y0 = from.y;
-  const double theta0g = wrapToPi(from.theta);
+  const double theta0g = from.theta;
   const double xng = to.x;
   const double yng = to.y;
-  const double thetafg = wrapToPi(to.theta);
+  const double thetafg = to.theta;
 
   // Projection into local rotational frame
   double xn = x0 - (x0 - xng) * cos(theta0g) - (y0 - yng) * sin(theta0g);
