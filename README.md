@@ -2,7 +2,7 @@
 
 Solves the Reeds-Shepp path planning problem 15x faster on average than [OMPL]'s implementation.
 
-Paper attachment TBD.
+[IEEE T-RO](https://doi.org/10.1109/TRO.2025.3554406)
 
 Reduces set of cases to consider down to 20 and introduces a new partition that speeds up the computation of the shortest path.
 
