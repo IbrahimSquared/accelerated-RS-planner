@@ -684,7 +684,10 @@ void Solver::setB(const double x, const double y, const double thetaf,
   if (thetaf >= 0) {
     // cond 13, 14, 19
     if (thetaf < pi / 2) {
-      double alpha = acos((3 * r * r + 0.25 * RL * RL) / (2 * r * RL));
+      double alpha = 0.0;
+      if (RL >= 2.0 * r) {
+        alpha = acos((3 * r * r + 0.25 * RL * RL) / (2 * r * RL));
+      }
       const double R0Lf = atan2(c0Ry_ - cfLy_, c0Rx_ - cfLx_);
       double beta = thetaf - pi / 2 - R0Lf;
 
@@ -723,9 +726,16 @@ void Solver::setB(const double x, const double y, const double thetaf,
       }
 
       // 14, 19
-      double gamma = acos((0.5 * LR + r) / (2 * r));
-      double beta_3 = atan2(cfRy_ - c0Ly_, cfRx_ - c0Lx_) + pi / 2;
-      if (RL <= 2 * r || beta_3 >= gamma) {
+      if (RL <= 2 * r) {
+        // CCC
+        P14(x, y, thetaf, d);
+        d *= r;
+        cond = 14;
+        return;
+      }
+      const double gamma = acos((0.5 * LR + r) / (2 * r));
+      const double beta_3 = atan2(cfRy_ - c0Ly_, cfRx_ - c0Lx_) + pi / 2;
+      if (beta_3 >= gamma) {
         // CCC
         P14(x, y, thetaf, d);
         d *= r;
