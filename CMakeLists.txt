@@ -23,3 +23,26 @@ find_package(ompl)
 target_link_libraries(acceleratedRSPlanner PRIVATE ompl)
 find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
 target_link_libraries(acceleratedRSPlanner PRIVATE sfml-graphics)
+
+include(CTest)
+if(BUILD_TESTING)
+    add_executable(
+        translationInvarianceTest
+        tests/TranslationInvarianceTest.cpp
+        src/ConfigParser.cpp
+        src/HelperFunctions.cpp
+        src/Solver.cpp
+        src/DesaulniersAlgorithm.cpp
+        src/Plotter.cpp
+    )
+    target_link_libraries(translationInvarianceTest PRIVATE ompl sfml-graphics)
+    set_target_properties(
+        translationInvarianceTest
+        PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    add_test(NAME translation_invariance COMMAND translationInvarianceTest)
+    set_tests_properties(
+        translation_invariance
+        PROPERTIES WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    )
+endif()

@@ -576,7 +576,7 @@ void Solver::setA(const double x, const double y, const double thetaf,
     }
 
     // thetaf >= LfL0
-    if (cfLx_ < 0) {
+    if (cfLx_ < x0) {
       // CCSC | -R+L+S+L
       P11(x, y, thetaf, d);
       d *= r;
@@ -642,7 +642,7 @@ void Solver::setA(const double x, const double y, const double thetaf,
     cond = 1;
     return;
   }
-  if (cfLx_ >= 2 * r) {
+  if (cfLx_ >= 2 * r + x0) {
     // 4
     P4(x, y, thetaf, d);
     d *= r;

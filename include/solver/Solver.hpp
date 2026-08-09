@@ -9,6 +9,8 @@
 
 namespace accelerated {
 
+class SolverTestAccess;
+
 class Solver {
 public:
   Solver() = default;
@@ -27,6 +29,8 @@ public:
   void evaluateQuery(const State &from, const State &to, const double r = 1);
 
 private:
+  friend class SolverTestAccess;
+
   const Config &config_ = ConfigParser::getInstance().getConfig();
   const HelperFunctions &helper_functions_ = HelperFunctions::getInstance();
   const Plotter &plotter = Plotter::getInstance();
