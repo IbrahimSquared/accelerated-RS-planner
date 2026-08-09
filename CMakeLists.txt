@@ -62,4 +62,24 @@ if(BUILD_TESTING)
         random_state_generation
         PROPERTIES WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
+
+    add_executable(
+        inputValidationTest
+        tests/InputValidationTest.cpp
+        src/ConfigParser.cpp
+        src/HelperFunctions.cpp
+        src/Solver.cpp
+        src/DesaulniersAlgorithm.cpp
+        src/Plotter.cpp
+    )
+    target_link_libraries(inputValidationTest PRIVATE ompl sfml-graphics)
+    set_target_properties(
+        inputValidationTest
+        PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    add_test(NAME input_validation COMMAND inputValidationTest)
+    set_tests_properties(
+        input_validation
+        PROPERTIES WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    )
 endif()

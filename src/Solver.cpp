@@ -8,6 +8,7 @@
 #include <numbers>
 #include <ompl/base/ScopedState.h>
 #include <ompl/base/spaces/ReedsSheppStateSpace.h>
+#include <stdexcept>
 
 using namespace std::numbers;
 namespace ob = ompl::base;
@@ -867,6 +868,8 @@ void Solver::setB(const double x, const double y, const double thetaf,
 /*****************************************************************************/
 void Solver::acceleratedRSPlanner(const State &from, const State &to, double &d,
                                   const double r, int &cond, int &Q) {
+  validateQuery(from, to, r);
+
   const double x0 = from.x;
   const double y0 = from.y;
   const double theta0g = from.theta;
@@ -938,6 +941,7 @@ void Solver::acceleratedRSPlanner(const State &from, const State &to, double &d,
 /*****************************************************************************/
 void Solver::evaluateQuery(const State &from, const State &to,
                            const double radius) {
+  validateQuery(from, to, radius);
 
   std::cout << "\n******************" << std::endl;
   std::cout << "State_from: {" << from.x << ", " << from.y << ", " << from.theta
@@ -1544,8 +1548,27 @@ void Solver::getErrors(const std::vector<State> &path, const State &to,
 
   errors.x = fabs(x - to.x);
   errors.y = fabs(y - to.y);
-  t = wrapToPi(t);
-  errors.theta = fabs(t - to.theta);
+  errors.theta = fabs(wrapToPi(t - to.theta));
+}
+
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
+void Solver::validateQuery(const State &from, const State &to,
+                           const double r) const {
+  if (!std::isfinite(r) || r <= 0.0) {
+    throw std::invalid_argument(
+        "Turning radius must be finite and greater than zero");
+  }
+
+  const bool finite_from = std::isfinite(from.x) && std::isfinite(from.y) &&
+                           std::isfinite(from.theta);
+  const bool finite_to = std::isfinite(to.x) && std::isfinite(to.y) &&
+                         std::isfinite(to.theta);
+  if (!finite_from || !finite_to) {
+    throw std::invalid_argument(
+        "Start and goal states must contain only finite values");
+  }
 }
 
 /*****************************************************************************/

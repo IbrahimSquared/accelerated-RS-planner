@@ -52,6 +52,7 @@ private:
                std::vector<State> &path, const double r) const;
   void getErrors(const std::vector<State> &path, const State &to,
                  State &errors) const;
+  void validateQuery(const State &from, const State &to, double r) const;
 
   // Proposed method
   void acceleratedRSPlanner(const State &from, const State &to, double &d,
