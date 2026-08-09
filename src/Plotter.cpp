@@ -1,6 +1,9 @@
 #include "helper/Plotter.hpp"
+#include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <numbers>
+#include <stdexcept>
 
 using namespace std::numbers;
 
@@ -21,13 +24,25 @@ void Plotter::draw(sf::RenderWindow &window, const State &to,
                    const std::vector<State> &path,
                    const std::vector<char> &motionTypes) const {
 
+  const auto firstInactiveMotion =
+      std::find(motionTypes.begin(), motionTypes.end(), 'N');
+  const std::size_t segmentCount =
+      std::distance(motionTypes.begin(), firstInactiveMotion);
+  if (path.size() != segmentCount + 1) {
+    throw std::invalid_argument(
+        "A plotted path must contain one more state than motion segments");
+  }
+
   const double min_x = config_.min_x;
   const double max_x = config_.max_x;
   const double min_y = config_.min_y;
   const double max_y = config_.max_y;
+  if (max_x <= min_x || max_y <= min_y) {
+    throw std::invalid_argument("Plot bounds must have positive width and height");
+  }
 
-  double xScale = window.getSize().x / (max_x - min_x);
-  double yScale = window.getSize().y / (max_y - min_y);
+  const double xScale = window.getSize().x / (max_x - min_x);
+  const double yScale = window.getSize().y / (max_y - min_y);
 
   const double marker_size = 20.0;
   sf::CircleShape firstPathPointMarker(marker_size);
@@ -43,13 +58,7 @@ void Plotter::draw(sf::RenderWindow &window, const State &to,
   window.draw(fromMarker);
 
   sf::CircleShape lastPathPointMarker(marker_size);
-  size_t lastIdx = 5;
-  for (size_t i = 0; i < motionTypes.size(); ++i) {
-    if (motionTypes[i] == 'N') {
-      lastIdx = i;
-      break;
-    }
-  }
+  const std::size_t lastIdx = segmentCount;
   lastPathPointMarker.setPosition(
       (path[lastIdx].x - min_x) * xScale - marker_size,
       (path[lastIdx].y - min_y) * yScale - marker_size);
@@ -62,7 +71,7 @@ void Plotter::draw(sf::RenderWindow &window, const State &to,
   toMarker.setFillColor(sf::Color::White);
   window.draw(toMarker);
 
-  double r = config_.r;
+  const double r = config_.r;
   const double L = 2;
   const double x_ext_start = path[0].x + L * r * cos(path[0].theta);
   const double y_ext_start = path[0].y + L * r * sin(path[0].theta);
@@ -100,8 +109,8 @@ void Plotter::draw(sf::RenderWindow &window, const State &to,
   std::cout << "******************" << std::endl;
 
   // Draw path
-  for (size_t i = 0; i < path.size(); ++i) {
-    // int motionDirection = (motionLengths[i] > 0) ? 1 : -1;
+  constexpr int numArcPoints = 100;
+  for (std::size_t i = 0; i < segmentCount; ++i) {
     if (motionTypes[i] == 'S') {
       sf::Vertex line[] = {
           sf::Vertex(sf::Vector2f((path[i].x - min_x) * xScale,
@@ -116,46 +125,44 @@ void Plotter::draw(sf::RenderWindow &window, const State &to,
     } else if (motionTypes[i] == 'N') {
       break;
     } else if (motionTypes[i] == 'L') {
-      double startAngle = path[i].theta;
+      const double startAngle = path[i].theta;
       const double cx = path[i].x - r * cos(startAngle - pi / 2);
       const double cy = path[i].y - r * sin(startAngle - pi / 2);
 
-      const int numPoints = 1000;
-
-      sf::VertexArray arc(sf::LineStrip, numPoints + 1);
+      sf::VertexArray arc(sf::LineStrip, numArcPoints + 1);
 
       arc[0].position.x = (path[i].x - min_x) * xScale;
       arc[0].position.y = (path[i].y - min_y) * yScale;
       arc[0].color = sf::Color::Green;
 
-      double endAngle = path[i + 1].theta;
-      for (int j = 1; j <= numPoints; ++j) {
-        double angle = startAngle + j * (endAngle - startAngle) / numPoints;
-        double pt_x = cx + r * cos(angle - pi / 2);
-        double pt_y = cy + r * sin(angle - pi / 2);
+      const double endAngle = path[i + 1].theta;
+      for (int j = 1; j <= numArcPoints; ++j) {
+        const double angle =
+            startAngle + j * (endAngle - startAngle) / numArcPoints;
+        const double pt_x = cx + r * cos(angle - pi / 2);
+        const double pt_y = cy + r * sin(angle - pi / 2);
         arc[j].position =
             sf::Vector2f((pt_x - min_x) * xScale, (pt_y - min_y) * yScale);
         arc[j].color = sf::Color::Magenta;
       }
       window.draw(arc);
     } else if (motionTypes[i] == 'R') {
-      double startAngle = path[i].theta;
+      const double startAngle = path[i].theta;
       const double cx = path[i].x + r * cos(startAngle - pi / 2);
       const double cy = path[i].y + r * sin(startAngle - pi / 2);
 
-      const int numPoints = 100;
-
-      sf::VertexArray arc(sf::LineStrip, numPoints + 1);
+      sf::VertexArray arc(sf::LineStrip, numArcPoints + 1);
 
       arc[0].position.x = (path[i].x - min_x) * xScale;
       arc[0].position.y = (path[i].y - min_y) * yScale;
       arc[0].color = sf::Color::Green;
 
-      double endAngle = path[i + 1].theta;
-      for (int j = 1; j <= numPoints; ++j) {
-        double angle = startAngle + j * (endAngle - startAngle) / numPoints;
-        double pt_x = cx - r * cos(angle - pi / 2);
-        double pt_y = cy - r * sin(angle - pi / 2);
+      const double endAngle = path[i + 1].theta;
+      for (int j = 1; j <= numArcPoints; ++j) {
+        const double angle =
+            startAngle + j * (endAngle - startAngle) / numArcPoints;
+        const double pt_x = cx - r * cos(angle - pi / 2);
+        const double pt_y = cy - r * sin(angle - pi / 2);
         arc[j].position =
             sf::Vector2f((pt_x - min_x) * xScale, (pt_y - min_y) * yScale);
         arc[j].color = sf::Color::Cyan;

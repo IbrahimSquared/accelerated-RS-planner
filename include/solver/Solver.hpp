@@ -50,9 +50,10 @@ private:
                      const int Q, State &errors, const double r);
 
   void getMotionTypes(const int condition, char motionTypes[5]) const;
-  void backProjectMotion(const int Q, const int condition, char motionTypes[5]);
-  void getPath(const int condition, char motionTypes[5],
-               std::vector<State> &path, const double r) const;
+  void backProjectMotion(const int condition, const int Q, char motionTypes[5],
+                         double motionLengths[5]) const;
+  void getPath(const char motionTypes[5], const double motionLengths[5],
+               std::vector<State> &path, double r) const;
   void getErrors(const std::vector<State> &path, const State &to,
                  State &errors) const;
   void validateQuery(const State &from, const State &to, double r) const;

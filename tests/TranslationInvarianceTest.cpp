@@ -39,9 +39,10 @@ public:
 
     char motionTypes[5] = {'N', 'N', 'N', 'N', 'N'};
     solver.getMotionTypes(condition, motionTypes);
-    solver.backProjectMotion(condition, quadrant, motionTypes);
+    double motionLengths[5] = {};
+    solver.backProjectMotion(condition, quadrant, motionTypes, motionLengths);
     std::vector<State> path = {from};
-    solver.getPath(condition, motionTypes, path, radius);
+    solver.getPath(motionTypes, motionLengths, path, radius);
 
     State errors = {};
     solver.getErrors(path, to, errors);

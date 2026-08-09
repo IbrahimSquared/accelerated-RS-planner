@@ -126,4 +126,24 @@ if(BUILD_TESTING)
         variability_characterization
         PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
+
+    add_executable(
+        reconstructionTest
+        tests/ReconstructionTest.cpp
+        src/ConfigParser.cpp
+        src/HelperFunctions.cpp
+        src/Solver.cpp
+        src/DesaulniersAlgorithm.cpp
+        src/Plotter.cpp
+    )
+    target_link_libraries(reconstructionTest PRIVATE ompl sfml-graphics)
+    set_target_properties(
+        reconstructionTest
+        PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    add_test(NAME reconstruction_idempotence COMMAND reconstructionTest)
+    set_tests_properties(
+        reconstruction_idempotence
+        PROPERTIES WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    )
 endif()

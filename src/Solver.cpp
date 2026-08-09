@@ -1004,12 +1004,13 @@ void Solver::evaluateQuery(const State &from, const State &to,
   getMotionTypes(condition, motionTypes);
 
   std::cout << "Quadrant: " << Q << std::endl;
-  backProjectMotion(condition, Q, motionTypes);
+  double motionLengths[5] = {};
+  backProjectMotion(condition, Q, motionTypes, motionLengths);
 
   std::vector<State> path;
   path.push_back(from);
 
-  getPath(condition, motionTypes, path, r);
+  getPath(motionTypes, motionLengths, path, r);
   getErrors(path, to, errors);
 
   std::cout << "Path: " << std::endl;
@@ -1200,10 +1201,11 @@ void Solver::computeAndDrawRandomPath(sf::RenderWindow &window) {
   getMotionTypes(condition, motionTypes);
 
   std::cout << "Quadrant: " << Q << std::endl;
-  backProjectMotion(condition, Q, motionTypes);
+  double motionLengths[5] = {};
+  backProjectMotion(condition, Q, motionTypes, motionLengths);
   std::vector<State> path;
   path.push_back(from);
-  getPath(condition, motionTypes, path, r);
+  getPath(motionTypes, motionLengths, path, r);
   getErrors(path, to, errors);
   std::cout << "******************" << std::endl;
   std::cout << "Errors: " << errors.x << " " << errors.y << " " << errors.theta
@@ -1217,10 +1219,6 @@ void Solver::computeAndDrawRandomPath(sf::RenderWindow &window) {
   }
 
   std::vector<char> motionTypesVector(motionTypes, motionTypes + 5);
-  std::vector<double> motionLengths = {
-      lengths_[condition - 1][0], lengths_[condition - 1][1],
-      lengths_[condition - 1][2], lengths_[condition - 1][3],
-      lengths_[condition - 1][4]};
   plotter.draw(window, to, path, motionTypesVector);
 }
 
@@ -1235,7 +1233,8 @@ void Solver::drawRandomPath() {
     sf::Event event;
     while (window.pollEvent(event)) {
       if (event.type == sf::Event::Closed ||
-          event.key.code == sf::Keyboard::Escape) {
+          (event.type == sf::Event::KeyPressed &&
+           event.key.code == sf::Keyboard::Escape)) {
         window.close();
       }
 
@@ -1340,10 +1339,11 @@ void Solver::validityCheck(const State &from, const State &to, const int cond,
                            const int Q, State &errors, const double r) {
   char motionTypes[5] = {'N', 'N', 'N', 'N', 'N'};
   getMotionTypes(cond, motionTypes);
-  backProjectMotion(cond, Q, motionTypes);
+  double motionLengths[5] = {};
+  backProjectMotion(cond, Q, motionTypes, motionLengths);
   std::vector<State> path;
   path.push_back(from);
-  getPath(cond, motionTypes, path, r);
+  getPath(motionTypes, motionLengths, path, r);
   getErrors(path, to, errors);
 }
 
@@ -1477,14 +1477,18 @@ void Solver::getMotionTypes(const int condition, char motionTypes[5]) const {
 /*****************************************************************************/
 /*****************************************************************************/
 void Solver::backProjectMotion(const int condition, const int Q,
-                               char motionTypes[5]) {
+                               char motionTypes[5],
+                               double motionLengths[5]) const {
+  for (int k = 0; k < 5; ++k) {
+    motionLengths[k] = lengths_[condition - 1][k];
+  }
   if (Q == 1) {
     return;
-  };
+  }
   for (int k = 0; k < 5; ++k) {
     if (motionTypes[k] == 'N') {
       break;
-    };
+    }
     if (Q == 4) {
       if (motionTypes[k] == 'L') {
         motionTypes[k] = 'R';
@@ -1492,30 +1496,30 @@ void Solver::backProjectMotion(const int condition, const int Q,
         motionTypes[k] = 'L';
       }
     } else if (Q == 3) {
-      lengths_[condition - 1][k] = -lengths_[condition - 1][k];
+      motionLengths[k] = -motionLengths[k];
       if (motionTypes[k] == 'L') {
         motionTypes[k] = 'R';
       } else if (motionTypes[k] == 'R') {
         motionTypes[k] = 'L';
       }
     } else if (Q == 2) {
-      lengths_[condition - 1][k] = -lengths_[condition - 1][k];
+      motionLengths[k] = -motionLengths[k];
     }
   }
-};
+}
 
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-void Solver::getPath(const int condition, char motionTypes[5],
+void Solver::getPath(const char motionTypes[5], const double motionLengths[5],
                      std::vector<State> &path, const double r) const {
   double x = path[0].x;
   double y = path[0].y;
   double t = path[0].theta;
   for (int k = 0; k < 5; ++k) {
-    char motionType = motionTypes[k];
-    double motionLength = fabs(lengths_[condition - 1][k]);
-    int motionDirection = (lengths_[condition - 1][k] > 0) ? 1 : -1;
+    const char motionType = motionTypes[k];
+    const double motionLength = fabs(motionLengths[k]);
+    const int motionDirection = (motionLengths[k] > 0) ? 1 : -1;
     if (motionType == 'N') {
       break;
     } else if (motionType == 'L') {
