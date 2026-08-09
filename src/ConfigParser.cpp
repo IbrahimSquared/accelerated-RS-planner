@@ -1,9 +1,56 @@
 #include "parser/ConfigParser.hpp"
+#include <cmath>
 #include <fstream>
 #include <iostream>
-#include <sstream>
+#include <stdexcept>
 
 namespace accelerated {
+
+namespace {
+
+void trim(std::string &text) {
+  const std::size_t first = text.find_first_not_of(" \t\r\n");
+  if (first == std::string::npos) {
+    text.clear();
+    return;
+  }
+  const std::size_t last = text.find_last_not_of(" \t\r\n");
+  text = text.substr(first, last - first + 1);
+}
+
+bool parseFiniteDouble(const std::string &key, const std::string &value,
+                       double &result) {
+  try {
+    std::size_t consumed = 0;
+    const double parsed = std::stod(value, &consumed);
+    if (consumed != value.size() || !std::isfinite(parsed)) {
+      throw std::invalid_argument("nonfinite or trailing input");
+    }
+    result = parsed;
+    return true;
+  } catch (...) {
+    std::cerr << "Invalid value for " << key << ": " << value << '\n';
+    return false;
+  }
+}
+
+bool parseInteger(const std::string &key, const std::string &value,
+                  int &result) {
+  try {
+    std::size_t consumed = 0;
+    const int parsed = std::stoi(value, &consumed);
+    if (consumed != value.size()) {
+      throw std::invalid_argument("trailing input");
+    }
+    result = parsed;
+    return true;
+  } catch (...) {
+    std::cerr << "Invalid value for " << key << ": " << value << '\n';
+    return false;
+  }
+}
+
+} // namespace
 
 /*****************************************************************************/
 /*****************************************************************************/
@@ -15,107 +62,88 @@ bool ConfigParser::parse(const std::string &filename) {
     return false;
   }
   std::cout << "Attempting to parse config file: " << filename << '\n';
+  Config parsed_config = config_;
   std::string line;
   while (std::getline(file, line)) {
-    // Ignore comments and blank lines
-    if (line.empty() || line[0] == '#') {
+    trim(line);
+    if (line.empty() || line.front() == '#') {
       continue;
     }
 
-    // Split the line into key and value
-    std::istringstream iss(line);
-    std::string key;
-    if (!std::getline(iss, key, '=')) {
-      continue;
+    const std::size_t separator = line.find('=');
+    if (separator == std::string::npos) {
+      std::cerr << "Expected key=value entry: " << line << '\n';
+      return false;
     }
-    std::string value;
-    if (!std::getline(iss, value)) {
-      continue;
+    std::string key = line.substr(0, separator);
+    std::string value = line.substr(separator + 1);
+    trim(key);
+    trim(value);
+    if (key.empty() || value.empty()) {
+      std::cerr << "Expected nonempty key and value: " << line << '\n';
+      return false;
     }
-
-    // Trim leading and trailing whitespace from key and value
-    key.erase(0, key.find_first_not_of(" \t"));
-    key.erase(key.find_last_not_of(" \t") + 1);
-    value.erase(0, value.find_first_not_of(" \t"));
-    value.erase(value.find_last_not_of(" \t") + 1);
 
     if (key == "min_x") {
-      try {
-        config_.min_x = std::stod(value);
-      } catch (...) {
-        std::cerr << "Invalid value for " << key << ": " << value << '\n';
+      if (!parseFiniteDouble(key, value, parsed_config.min_x)) {
         return false;
       }
     } else if (key == "max_x") {
-      try {
-        config_.max_x = std::stod(value);
-      } catch (...) {
-        std::cerr << "Invalid value for " << key << ": " << value << '\n';
+      if (!parseFiniteDouble(key, value, parsed_config.max_x)) {
         return false;
       }
     } else if (key == "min_y") {
-      try {
-        config_.min_y = std::stod(value);
-      } catch (...) {
-        std::cerr << "Invalid value for " << key << ": " << value << '\n';
+      if (!parseFiniteDouble(key, value, parsed_config.min_y)) {
         return false;
       }
     } else if (key == "max_y") {
-      try {
-        config_.max_y = std::stod(value);
-      } catch (...) {
-        std::cerr << "Invalid value for " << key << ": " << value << '\n';
+      if (!parseFiniteDouble(key, value, parsed_config.max_y)) {
         return false;
       }
     } else if (key == "min_thetaf") {
-      try {
-        config_.min_thetaf = std::stod(value);
-      } catch (...) {
-        std::cerr << "Invalid value for " << key << ": " << value << '\n';
+      if (!parseFiniteDouble(key, value, parsed_config.min_thetaf)) {
         return false;
       }
     } else if (key == "max_thetaf") {
-      try {
-        config_.max_thetaf = std::stod(value);
-      } catch (...) {
-        std::cerr << "Invalid value for " << key << ": " << value << '\n';
+      if (!parseFiniteDouble(key, value, parsed_config.max_thetaf)) {
         return false;
       }
     } else if (key == "number_of_final_states") {
-      try {
-        config_.number_of_final_states = std::stoi(value);
-      } catch (...) {
-        std::cerr << "Invalid value for " << key << ": " << value << '\n';
+      if (!parseInteger(key, value, parsed_config.number_of_final_states)) {
         return false;
       }
     } else if (key == "r") {
-      try {
-        config_.r = std::stod(value);
-      } catch (...) {
-        std::cerr << "Invalid value for " << key << ": " << value << '\n';
+      if (!parseFiniteDouble(key, value, parsed_config.r)) {
         return false;
       }
     } else {
       std::cerr << "Invalid key: " << key << '\n';
       return false;
     }
-    if (config_.min_x > config_.max_x) {
-      std::cerr << "min_x must be less than or equal to max_x\n";
-      return false;
-    }
-    if (config_.min_y > config_.max_y) {
-      std::cerr << "min_y must be less than or equal to max_y\n";
-      return false;
-    }
-    if (config_.min_thetaf > config_.max_thetaf) {
-      std::cerr << "min_thetaf must be less than or equal to max_thetaf\n";
-      return false;
-    }
-    if (config_.number_of_final_states < 0) {
-      std::cerr << "number_of_final_states must be non-negative\n";
-      return false;
-    }
   }
+
+  if (parsed_config.min_x >= parsed_config.max_x) {
+    std::cerr << "min_x must be less than max_x\n";
+    return false;
+  }
+  if (parsed_config.min_y >= parsed_config.max_y) {
+    std::cerr << "min_y must be less than max_y\n";
+    return false;
+  }
+  if (parsed_config.min_thetaf > parsed_config.max_thetaf) {
+    std::cerr << "min_thetaf must be less than or equal to max_thetaf\n";
+    return false;
+  }
+  if (parsed_config.r <= 0.0) {
+    std::cerr << "r must be greater than zero\n";
+    return false;
+  }
+  if (parsed_config.number_of_final_states <= 0) {
+    std::cerr << "number_of_final_states must be positive\n";
+    return false;
+  }
+
+  config_ = parsed_config;
   std::cout << "Config file parsed successfully" << std::endl;
 
   return true;

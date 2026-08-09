@@ -189,4 +189,19 @@ if(BUILD_TESTING)
         benchmark_methodology
         PROPERTIES WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
+
+    add_executable(
+        configParserTest
+        tests/ConfigParserTest.cpp
+        src/ConfigParser.cpp
+    )
+    set_target_properties(
+        configParserTest
+        PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    add_test(NAME config_parser COMMAND configParserTest)
+    set_tests_properties(
+        config_parser
+        PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
 endif()
