@@ -204,4 +204,20 @@ if(BUILD_TESTING)
         config_parser
         PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
     )
+
+    add_executable(
+        helperStatisticsTest
+        tests/HelperStatisticsTest.cpp
+        src/ConfigParser.cpp
+        src/HelperFunctions.cpp
+    )
+    set_target_properties(
+        helperStatisticsTest
+        PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    add_test(NAME helper_statistics COMMAND helperStatisticsTest)
+    set_tests_properties(
+        helper_statistics
+        PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
 endif()

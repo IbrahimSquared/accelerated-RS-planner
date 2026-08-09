@@ -1,9 +1,11 @@
 #include "helper/HelperFunctions.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <iostream>
 #include <numbers>
 #include <random>
+#include <stdexcept>
 
 using namespace std::numbers;
 
@@ -109,6 +111,14 @@ void HelperFunctions::timeStats(const long duration_acceleratedRS,
                                 const long duration_OMPL,
                                 const long duration_Desaulniers,
                                 const int number_of_final_states) const {
+  if (duration_acceleratedRS <= 0 || duration_OMPL <= 0 ||
+      duration_Desaulniers <= 0) {
+    throw std::invalid_argument("Timing durations must be positive");
+  }
+  if (number_of_final_states <= 0) {
+    throw std::invalid_argument("Timing statistics require at least one state");
+  }
+
   std::cout << "------------------" << std::endl;
   std::cout << "Time stats: " << std::endl;
   std::cout << "******************" << std::endl;
@@ -146,11 +156,23 @@ void HelperFunctions::errorStats(
     const std::vector<double> &distances_OMPL,
     const std::vector<double> &distances_Desaulniers) const {
 
+  if (distances_OMPL.empty() ||
+      distances_acceleratedRS.size() != distances_OMPL.size() ||
+      distances_Desaulniers.size() != distances_OMPL.size()) {
+    throw std::invalid_argument(
+        "Distance vectors must be nonempty and have equal sizes");
+  }
+
   double avg_error_accelerated = 0.0;
   double avg_error_Desaulniers = 0.0;
   double max_error_accelerated = 0.0;
   double max_error_Desaulniers = 0.0;
   for (size_t i = 0; i < distances_OMPL.size(); i++) {
+    if (!std::isfinite(distances_acceleratedRS[i]) ||
+        !std::isfinite(distances_OMPL[i]) ||
+        !std::isfinite(distances_Desaulniers[i])) {
+      throw std::invalid_argument("Distance vectors must contain finite values");
+    }
     double error_accelerated =
         std::abs(distances_acceleratedRS[i] - distances_OMPL[i]);
     double error_Desaulniers =
@@ -183,9 +205,19 @@ void HelperFunctions::errorStats(
     const std::vector<double> &distances_acceleratedRS,
     const std::vector<double> &distances_OMPL) const {
 
+  if (distances_OMPL.empty() ||
+      distances_acceleratedRS.size() != distances_OMPL.size()) {
+    throw std::invalid_argument(
+        "Distance vectors must be nonempty and have equal sizes");
+  }
+
   double avg_error_accelerated = 0.0;
   double max_error_accelerated = 0.0;
   for (size_t i = 0; i < distances_OMPL.size(); i++) {
+    if (!std::isfinite(distances_acceleratedRS[i]) ||
+        !std::isfinite(distances_OMPL[i])) {
+      throw std::invalid_argument("Distance vectors must contain finite values");
+    }
     double error_accelerated =
         std::abs(distances_acceleratedRS[i] - distances_OMPL[i]);
     avg_error_accelerated += error_accelerated;
