@@ -2,6 +2,7 @@
 #include "classic/DesaulniersAlgorithm.hpp"
 
 #include <SFML/Graphics.hpp>
+#include <algorithm>
 #include <chrono>
 #include <complex>
 #include <fstream>
@@ -1050,77 +1051,189 @@ void Solver::evaluateQuery(const State &from, const State &to,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-void Solver::benchmarkPlanners() {
-  const int number_of_final_states = 10000000;
-  // std::random_device rd;
-  // std::mt19937 gen(rd());
-  // std::uniform_real_distribution<> r_dis(0.01, 10);
-  // const double r = r_dis(gen);
+BenchmarkResult Solver::benchmarkPlanners(std::size_t number_of_final_states,
+                                          const std::uint32_t seed,
+                                          const std::size_t repetitions) {
+  if (number_of_final_states == 0) {
+    if (config_.number_of_final_states <= 0) {
+      throw std::invalid_argument("Benchmark requires at least one state");
+    }
+    number_of_final_states = config_.number_of_final_states;
+  }
+  if (repetitions == 0) {
+    throw std::invalid_argument("Benchmark requires at least one repetition");
+  }
+
   const double r = 1;
 
   std::vector<State> toStates;
   const bool use_config = false;
   helper_functions_.generateRandomStates(toStates, number_of_final_states,
-                                          use_config, r);
-
-  std::vector<double> distances_acceleratedRS(number_of_final_states);
-  std::vector<double> distances_Desaulniers(number_of_final_states);
-  std::vector<double> distances_OMPL(number_of_final_states);
+                                          use_config, r, seed);
 
   const State from = {0, 0, pi / 2};
-
-  // AcceleratedRS (Proposed)
   double d_accelerated = 0;
-  State to;
   int Q, condition;
-  auto start_accelerated = std::chrono::high_resolution_clock::now();
-  for (int i = 0; i < number_of_final_states; ++i) {
-    to.x = toStates[i].x;
-    to.y = toStates[i].y;
-    to.theta = toStates[i].theta - pi / 2;
-    acceleratedRSPlanner(from, to, d_accelerated, r, condition, Q);
-    distances_acceleratedRS[i] = d_accelerated;
-  }
-  auto end_accelerated = std::chrono::high_resolution_clock::now();
-  auto duration_accelerated =
-      durationInMicroseconds(start_accelerated, end_accelerated);
 
-  // Reeds-Shepp State Space (OMPL's implementation)
   ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(r));
   ob::ScopedState<> fromOMPL(space), toOMPL(space);
   fromOMPL[0] = from.x;
   fromOMPL[1] = from.y;
   fromOMPL[2] = from.theta;
-  double d_OMPL = 0;
-  auto start_OMPL = std::chrono::high_resolution_clock::now();
-  for (int i = 0; i < number_of_final_states; ++i) {
-    toOMPL[0] = toStates[i].x;
-    toOMPL[1] = toStates[i].y;
-    toOMPL[2] = toStates[i].theta - pi / 2;
-    d_OMPL = space->distance(fromOMPL(), toOMPL());
-    distances_OMPL[i] = d_OMPL;
-  }
-  auto end_OMPL = std::chrono::high_resolution_clock::now();
-  auto duration_OMPL = durationInMicroseconds(start_OMPL, end_OMPL);
 
-  // Our implmentation of An Efficient Algorithm to find a shortest path for a
-  // car-like robot
   DesaulniersAlgorithm desaulniersAlgorithm;
-  double d_Desaulniers = 0;
-  auto start_Desaulniers = std::chrono::high_resolution_clock::now();
-  for (int i = 0; i < number_of_final_states; ++i) {
-    d_Desaulniers = desaulniersAlgorithm.getDistance(
-        toStates[i].x, toStates[i].y, toStates[i].theta);
-    distances_Desaulniers[i] = d_Desaulniers;
-  }
-  auto end_Desaulniers = std::chrono::high_resolution_clock::now();
-  auto duration_Desaulniers =
-      durationInMicroseconds(start_Desaulniers, end_Desaulniers);
 
-  helper_functions_.timeStats(duration_accelerated, duration_OMPL,
-                              duration_Desaulniers, number_of_final_states);
-  helper_functions_.errorStats(distances_acceleratedRS, distances_OMPL,
-                               distances_Desaulniers);
+  const auto acceleratedPass = [&]() {
+    double checksum = 0.0;
+    const auto start = std::chrono::steady_clock::now();
+    for (const State &generated : toStates) {
+      const State to = {generated.x, generated.y, generated.theta - pi / 2};
+      acceleratedRSPlanner(from, to, d_accelerated, r, condition, Q);
+      checksum += d_accelerated;
+    }
+    const auto end = std::chrono::steady_clock::now();
+    const double duration =
+        std::chrono::duration<double, std::micro>(end - start).count();
+    return std::pair<double, double>(duration, checksum);
+  };
+
+  const auto omplPass = [&]() {
+    double checksum = 0.0;
+    const auto start = std::chrono::steady_clock::now();
+    for (const State &generated : toStates) {
+      toOMPL[0] = generated.x;
+      toOMPL[1] = generated.y;
+      toOMPL[2] = generated.theta - pi / 2;
+      checksum += space->distance(fromOMPL(), toOMPL());
+    }
+    const auto end = std::chrono::steady_clock::now();
+    const double duration =
+        std::chrono::duration<double, std::micro>(end - start).count();
+    return std::pair<double, double>(duration, checksum);
+  };
+
+  const auto desaulniersPass = [&]() {
+    double checksum = 0.0;
+    const auto start = std::chrono::steady_clock::now();
+    for (const State &generated : toStates) {
+      checksum += desaulniersAlgorithm.getDistance(
+          generated.x, generated.y, generated.theta);
+    }
+    const auto end = std::chrono::steady_clock::now();
+    const double duration =
+        std::chrono::duration<double, std::micro>(end - start).count();
+    return std::pair<double, double>(duration, checksum);
+  };
+
+  const std::size_t warmup_count =
+      std::min<std::size_t>(number_of_final_states, 10000);
+  double benchmark_checksum = 0.0;
+  for (std::size_t i = 0; i < warmup_count; ++i) {
+    const State &generated = toStates[i];
+    const State to = {generated.x, generated.y, generated.theta - pi / 2};
+    acceleratedRSPlanner(from, to, d_accelerated, r, condition, Q);
+    benchmark_checksum += d_accelerated;
+    toOMPL[0] = generated.x;
+    toOMPL[1] = generated.y;
+    toOMPL[2] = generated.theta - pi / 2;
+    benchmark_checksum += space->distance(fromOMPL(), toOMPL());
+    benchmark_checksum += desaulniersAlgorithm.getDistance(
+        generated.x, generated.y, generated.theta);
+  }
+
+  std::array<std::vector<double>, 3> timings;
+  for (std::vector<double> &method_timings : timings) {
+    method_timings.reserve(repetitions);
+  }
+  std::mt19937 order_generator(seed ^ 0xb3c4a11U);
+  for (std::size_t repetition = 0; repetition < repetitions; ++repetition) {
+    std::array<int, 3> order = {0, 1, 2};
+    std::shuffle(order.begin(), order.end(), order_generator);
+    for (const int method : order) {
+      std::pair<double, double> run;
+      if (method == 0) {
+        run = acceleratedPass();
+      } else if (method == 1) {
+        run = omplPass();
+      } else {
+        run = desaulniersPass();
+      }
+      timings[method].push_back(run.first);
+      benchmark_checksum += run.second;
+    }
+  }
+
+  const auto median = [](std::vector<double> values) {
+    std::sort(values.begin(), values.end());
+    const std::size_t midpoint = values.size() / 2;
+    if (values.size() % 2 == 0) {
+      return 0.5 * (values[midpoint - 1] + values[midpoint]);
+    }
+    return values[midpoint];
+  };
+
+  BenchmarkResult result;
+  result.sample_count = number_of_final_states;
+  result.repetitions = repetitions;
+  result.seed = seed;
+  result.accelerated_trials_microseconds = timings[0];
+  result.ompl_trials_microseconds = timings[1];
+  result.desaulniers_trials_microseconds = timings[2];
+  result.accelerated_microseconds = median(timings[0]);
+  result.ompl_microseconds = median(timings[1]);
+  result.desaulniers_microseconds = median(timings[2]);
+
+  long double accelerated_error_sum = 0.0;
+  long double desaulniers_error_sum = 0.0;
+  for (const State &generated : toStates) {
+    const State to = {generated.x, generated.y, generated.theta - pi / 2};
+    acceleratedRSPlanner(from, to, d_accelerated, r, condition, Q);
+    toOMPL[0] = generated.x;
+    toOMPL[1] = generated.y;
+    toOMPL[2] = generated.theta - pi / 2;
+    const double d_OMPL = space->distance(fromOMPL(), toOMPL());
+    const double d_Desaulniers = desaulniersAlgorithm.getDistance(
+        generated.x, generated.y, generated.theta);
+    const double accelerated_error = std::abs(d_accelerated - d_OMPL);
+    const double desaulniers_error = std::abs(d_Desaulniers - d_OMPL);
+    accelerated_error_sum += accelerated_error;
+    desaulniers_error_sum += desaulniers_error;
+    result.accelerated_maximum_error =
+        std::max(result.accelerated_maximum_error, accelerated_error);
+    result.desaulniers_maximum_error =
+        std::max(result.desaulniers_maximum_error, desaulniers_error);
+  }
+  result.accelerated_average_error =
+      static_cast<double>(accelerated_error_sum / number_of_final_states);
+  result.desaulniers_average_error =
+      static_cast<double>(desaulniers_error_sum / number_of_final_states);
+
+  std::cout << "\nBenchmark summary (median of " << repetitions
+            << " repetitions)\n"
+            << "Samples: " << number_of_final_states << "\n"
+            << "Seed: " << seed << "\n"
+            << "Warmup samples per method: " << warmup_count << "\n"
+            << "Raw timing trials are available in BenchmarkResult\n"
+            << "Accelerated RS total: " << result.accelerated_microseconds
+            << " us\n"
+            << "OMPL total: " << result.ompl_microseconds << " us\n"
+            << "Desaulniers total: " << result.desaulniers_microseconds
+            << " us\n"
+            << "OMPL / accelerated speedup: "
+            << result.ompl_microseconds / result.accelerated_microseconds
+            << "\n"
+            << "OMPL / Desaulniers speedup: "
+            << result.ompl_microseconds / result.desaulniers_microseconds
+            << "\n"
+            << "Accelerated average/max error: "
+            << result.accelerated_average_error << " / "
+            << result.accelerated_maximum_error << "\n"
+            << "Desaulniers average/max error: "
+            << result.desaulniers_average_error << " / "
+            << result.desaulniers_maximum_error << "\n"
+            << "Checksum: " << benchmark_checksum << std::endl;
+
+  return result;
 }
 
 /*****************************************************************************/

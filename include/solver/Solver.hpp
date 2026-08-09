@@ -23,6 +23,22 @@ struct SolveResult {
   std::vector<State> path;
 };
 
+struct BenchmarkResult {
+  std::size_t sample_count = 0;
+  std::size_t repetitions = 0;
+  std::uint32_t seed = 0;
+  double accelerated_microseconds = 0.0;
+  double ompl_microseconds = 0.0;
+  double desaulniers_microseconds = 0.0;
+  std::vector<double> accelerated_trials_microseconds;
+  std::vector<double> ompl_trials_microseconds;
+  std::vector<double> desaulniers_trials_microseconds;
+  double accelerated_average_error = 0.0;
+  double accelerated_maximum_error = 0.0;
+  double desaulniers_average_error = 0.0;
+  double desaulniers_maximum_error = 0.0;
+};
+
 class Solver {
 public:
   Solver() = default;
@@ -34,7 +50,9 @@ public:
   /*!
    * @brief
    */
-  void benchmarkPlanners();
+  BenchmarkResult benchmarkPlanners(
+      std::size_t number_of_final_states = 0,
+      std::uint32_t seed = 0x5eed5eedU, std::size_t repetitions = 5);
   // Simulates random start/end config and checks validity
   void RandomPathsValidityChecks();
   // Press enter to solve and draw a random path

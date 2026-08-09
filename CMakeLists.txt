@@ -169,4 +169,24 @@ if(BUILD_TESTING)
         public_api
         PROPERTIES WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
+
+    add_executable(
+        benchmarkTest
+        tests/BenchmarkTest.cpp
+        src/ConfigParser.cpp
+        src/HelperFunctions.cpp
+        src/Solver.cpp
+        src/DesaulniersAlgorithm.cpp
+        src/Plotter.cpp
+    )
+    target_link_libraries(benchmarkTest PRIVATE ompl sfml-graphics)
+    set_target_properties(
+        benchmarkTest
+        PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    add_test(NAME benchmark_methodology COMMAND benchmarkTest)
+    set_tests_properties(
+        benchmark_methodology
+        PROPERTIES WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    )
 endif()
