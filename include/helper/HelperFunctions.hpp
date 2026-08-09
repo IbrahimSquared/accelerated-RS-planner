@@ -2,6 +2,9 @@
 #define HELPERFUNCTIONS_HPP
 
 #include <chrono>
+#include <cstddef>
+#include <cstdint>
+#include <optional>
 #include <vector>
 
 #include "parser/ConfigParser.hpp"
@@ -21,8 +24,10 @@ class HelperFunctions {
 public:
   static HelperFunctions &getInstance();
 
-  void generateRandomStates(std::vector<State> &states, const bool use_config,
-                            double r = 1.0) const;
+  void generateRandomStates(
+      std::vector<State> &states, std::size_t number_of_final_states,
+      bool use_config, double r = 1.0,
+      std::optional<std::uint32_t> seed = std::nullopt) const;
   void errorStats(const std::vector<double> &distancesAcceleratedRS,
                   const std::vector<double> &distancesOMPL,
                   const std::vector<double> &distancesDesaulniers) const;

@@ -1041,9 +1041,9 @@ void Solver::benchmarkPlanners() {
   const double r = 1;
 
   std::vector<State> toStates;
-  toStates.reserve(number_of_final_states);
   const bool use_config = false;
-  helper_functions_.generateRandomStates(toStates, use_config, r);
+  helper_functions_.generateRandomStates(toStates, number_of_final_states,
+                                          use_config, r);
 
   std::vector<double> distances_acceleratedRS(number_of_final_states);
   std::vector<double> distances_Desaulniers(number_of_final_states);
@@ -1252,12 +1252,12 @@ void Solver::RandomPathsValidityChecks() {
   // double r = r_dis(gen);
 
   std::vector<State> toStates;
-  toStates.reserve(number_of_final_states);
-  helper_functions_.generateRandomStates(toStates, use_config);
+  helper_functions_.generateRandomStates(toStates, number_of_final_states,
+                                          use_config);
   State from;
   std::vector<State> fromStates;
-  fromStates.reserve(number_of_final_states);
-  helper_functions_.generateRandomStates(fromStates, use_config);
+  helper_functions_.generateRandomStates(fromStates, number_of_final_states,
+                                          use_config);
 
   double d_accelerated = 0;
   int condition = 0;
@@ -1554,9 +1554,9 @@ void Solver::getErrors(const std::vector<State> &path, const State &to,
 void Solver::characterizeVariability() {
   const int number_of_final_states = 100000000;
   std::vector<State> toStates;
-  toStates.reserve(number_of_final_states);
   const bool use_config = true;
-  helper_functions_.generateRandomStates(toStates, use_config);
+  helper_functions_.generateRandomStates(toStates, number_of_final_states,
+                                          use_config);
 
   std::vector<std::vector<State>> stateCategory(20);
   const State from = {0, 0, 0};

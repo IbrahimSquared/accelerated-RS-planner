@@ -12,11 +12,11 @@ namespace accelerated {
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-void HelperFunctions::generateRandomStates(std::vector<State> &states,
-                                           const bool use_config,
-                                           double r) const {
+void HelperFunctions::generateRandomStates(
+    std::vector<State> &states, const std::size_t number_of_final_states,
+    const bool use_config, double r,
+    const std::optional<std::uint32_t> seed) const {
   double min_x, max_x, min_y, max_y, min_thetaf, max_thetaf;
-  const int number_of_final_states = states.capacity();
   if (use_config) {
     min_x = config_.min_x;
     max_x = config_.max_x;
@@ -47,26 +47,38 @@ void HelperFunctions::generateRandomStates(std::vector<State> &states,
             << std::endl;
   std::cout << "r: " << r << std::endl;
 
-  std::random_device rd;
-  std::mt19937 gen(rd());
+  std::uint32_t resolved_seed;
+  if (seed.has_value()) {
+    resolved_seed = *seed;
+  } else {
+    std::random_device rd;
+    resolved_seed = rd();
+  }
+  std::cout << "seed: " << resolved_seed << std::endl;
+  std::mt19937 gen(resolved_seed);
   std::uniform_real_distribution<> x_dis(min_x, max_x);
   std::uniform_real_distribution<> y_dis(min_y, max_y);
   std::uniform_real_distribution<> theta_dis(min_thetaf, max_thetaf);
 
-  int progress_print_rate = ceil(0.1 * number_of_final_states);
+  states.clear();
+  states.reserve(number_of_final_states);
 
-  int counter = 0, counter_old = 0;
-  bool q2 = 0;
+  const std::size_t progress_print_rate =
+      std::max<std::size_t>(1, std::ceil(0.1 * number_of_final_states));
+
+  std::size_t counter = 0;
+  std::size_t counter_old = 0;
   while (counter < number_of_final_states) {
-    double x = x_dis(gen);
-    double y = y_dis(gen);
-    double theta = theta_dis(gen);
-    State state(x, y, theta);
+    const double x = x_dis(gen);
+    const double y = y_dis(gen);
+    const double theta = theta_dis(gen);
+    const State state(x, y, theta);
 
+    bool accept_state = true;
     if (!use_config) { // for benchmarking the 3 solvers
-      double cx = x + r * cos(theta);
-      double cy = y + r * sin(theta);
-      q2 = (cx <= 1 && cy >= 0);
+      const double cx = x + r * cos(theta);
+      const double cy = y + r * sin(theta);
+      accept_state = (cx <= 1 && cy >= 0);
     }
 
     if ((counter % progress_print_rate) == 0 && counter != counter_old) {
@@ -74,14 +86,9 @@ void HelperFunctions::generateRandomStates(std::vector<State> &states,
       std::cout << "State generation progress: "
                 << 10.0 * counter / progress_print_rate << "%" << std::endl;
     }
-    if (use_config) {
-      states[counter] = state;
-      counter++;
-    } else {
-      if (q2) { // for benchmarking the 3 solvers
-        states[counter] = state;
-        counter++;
-      }
+    if (accept_state) {
+      states.push_back(state);
+      ++counter;
     }
   }
   std::cout << "State generation progress: 100% \n" << std::endl;

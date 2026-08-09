@@ -45,4 +45,21 @@ if(BUILD_TESTING)
         translation_invariance
         PROPERTIES WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
+
+    add_executable(
+        randomStateGenerationTest
+        tests/RandomStateGenerationTest.cpp
+        src/ConfigParser.cpp
+        src/HelperFunctions.cpp
+    )
+    target_compile_definitions(randomStateGenerationTest PRIVATE _GLIBCXX_ASSERTIONS)
+    set_target_properties(
+        randomStateGenerationTest
+        PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    add_test(NAME random_state_generation COMMAND randomStateGenerationTest)
+    set_tests_properties(
+        random_state_generation
+        PROPERTIES WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    )
 endif()
