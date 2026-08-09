@@ -949,9 +949,28 @@ void Solver::acceleratedRSPlanner(const State &from, const State &to, double &d,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
+SolveResult Solver::solve(const State &from, const State &to,
+                          const double radius) {
+  Solver workspace;
+  SolveResult result;
+  workspace.acceleratedRSPlanner(from, to, result.distance, radius,
+                                 result.condition, result.quadrant);
+  workspace.getMotionTypes(result.condition, result.motion_types.data());
+  workspace.backProjectMotion(result.condition, result.quadrant,
+                              result.motion_types.data(),
+                              result.motion_lengths.data());
+  result.path.push_back(from);
+  workspace.getPath(result.motion_types.data(), result.motion_lengths.data(),
+                    result.path, radius);
+  return result;
+}
+
+/*****************************************************************************/
+/*****************************************************************************/
+/*****************************************************************************/
 void Solver::evaluateQuery(const State &from, const State &to,
-                           const double radius) {
-  validateQuery(from, to, radius);
+                           const double radius) const {
+  const SolveResult result = solve(from, to, radius);
 
   std::cout << "\n******************" << std::endl;
   std::cout << "State_from: {" << from.x << ", " << from.y << ", " << from.theta
@@ -959,21 +978,17 @@ void Solver::evaluateQuery(const State &from, const State &to,
   std::cout << "State_to: {" << to.x << ", " << to.y << ", " << to.theta << "}"
             << std::endl;
 
-  const double r = radius;
   // Reeds-Shepp State Space (OMPL's implementation)
-  ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(r));
+  ob::StateSpacePtr space(
+      std::make_shared<ob::ReedsSheppStateSpace>(radius));
   ob::ScopedState<> fromRSS(space), toRSS(space);
 
-  double d_accelerated = 0;
-  int condition = 0;
-  int Q = 0;
-  acceleratedRSPlanner(from, to, d_accelerated, r, condition, Q);
-
   std::cout << "******************" << std::endl;
-  std::cout << "AcceleratedRSPlanner condition: " << condition << std::endl;
+  std::cout << "AcceleratedRSPlanner condition: " << result.condition
+            << std::endl;
   std::cout << "******************" << std::endl;
-  for (int i = 0; i < 5; ++i) {
-    std::cout << lengths_[condition - 1][i] << " ";
+  for (const double length : result.motion_lengths) {
+    std::cout << length << " ";
   }
 
   fromRSS[0] = from.x;
@@ -992,31 +1007,19 @@ void Solver::evaluateQuery(const State &from, const State &to,
             << std::endl;
 
   std::cout << "******************" << std::endl;
-  std::cout << "AcceleratedRSPlanner path length: " << d_accelerated
+  std::cout << "AcceleratedRSPlanner path length: " << result.distance
             << std::endl;
-  std::cout << "OMPL path length: " << reedsSheppPath.length() * r << std::endl;
-  State errors;
-  double d = 0;
-  acceleratedRSPlanner(from, to, d, r, condition, Q);
-  std::cout << "Condition: " << condition << std::endl;
+  std::cout << "OMPL path length: " << reedsSheppPath.length() * radius
+            << std::endl;
+  std::cout << "Condition: " << result.condition << std::endl;
+  std::cout << "Quadrant: " << result.quadrant << std::endl;
 
-  char motionTypes[5] = {'N', 'N', 'N', 'N', 'N'};
-  getMotionTypes(condition, motionTypes);
-
-  std::cout << "Quadrant: " << Q << std::endl;
-  double motionLengths[5] = {};
-  backProjectMotion(condition, Q, motionTypes, motionLengths);
-
-  std::vector<State> path;
-  path.push_back(from);
-
-  getPath(motionTypes, motionLengths, path, r);
-  getErrors(path, to, errors);
+  State errors = {};
+  getErrors(result.path, to, errors);
 
   std::cout << "Path: " << std::endl;
-  for (size_t i = 0; i < path.size(); ++i) {
-    std::cout << path[i].x << " " << path[i].y << " " << path[i].theta
-              << std::endl;
+  for (const State &state : result.path) {
+    std::cout << state.x << " " << state.y << " " << state.theta << std::endl;
   }
 
   std::cout << "******************" << std::endl;
@@ -1032,8 +1035,8 @@ void Solver::evaluateQuery(const State &from, const State &to,
 
   // cast motion types to string
   std::string motionTypesStr;
-  for (int i = 0; i < 5; ++i) {
-    motionTypesStr += motionTypes[i];
+  for (const char motionType : result.motion_types) {
+    motionTypesStr += motionType;
   }
   std::cout << "******************" << std::endl;
   std::cout << "Drawing motion type: ";
@@ -1160,20 +1163,18 @@ void Solver::computeAndDrawRandomPath(sf::RenderWindow &window) {
   std::cout << "State_to: {" << to.x << ", " << to.y << ", " << to.theta << "}"
             << std::endl;
 
+  const SolveResult result = solve(from, to, r);
+
   // Reeds-Shepp State Space (OMPL's implementation)
   ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(r));
   ob::ScopedState<> fromRSS(space), toRSS(space);
 
-  double d_accelerated = 0;
-  int condition = 0;
-  int Q = 0;
-  acceleratedRSPlanner(from, to, d_accelerated, r, condition, Q);
-
   std::cout << "******************" << std::endl;
-  std::cout << "AcceleratedRSPlanner condition: " << condition << std::endl;
+  std::cout << "AcceleratedRSPlanner condition: " << result.condition
+            << std::endl;
   std::cout << "******************" << std::endl;
-  for (int i = 0; i < 5; ++i) {
-    std::cout << lengths_[condition - 1][i] << " ";
+  for (const double length : result.motion_lengths) {
+    std::cout << length << " ";
   }
 
   fromRSS[0] = from.x;
@@ -1192,21 +1193,11 @@ void Solver::computeAndDrawRandomPath(sf::RenderWindow &window) {
             << std::endl;
 
   std::cout << "******************" << std::endl;
-  std::cout << "AcceleratedRSPlanner path length: " << d_accelerated
+  std::cout << "AcceleratedRSPlanner path length: " << result.distance
             << std::endl;
   std::cout << "OMPL path length: " << reedsSheppPath.length() * r << std::endl;
-  State errors;
-
-  char motionTypes[5] = {'N', 'N', 'N', 'N', 'N'};
-  getMotionTypes(condition, motionTypes);
-
-  std::cout << "Quadrant: " << Q << std::endl;
-  double motionLengths[5] = {};
-  backProjectMotion(condition, Q, motionTypes, motionLengths);
-  std::vector<State> path;
-  path.push_back(from);
-  getPath(motionTypes, motionLengths, path, r);
-  getErrors(path, to, errors);
+  State errors = {};
+  getErrors(result.path, to, errors);
   std::cout << "******************" << std::endl;
   std::cout << "Errors: " << errors.x << " " << errors.y << " " << errors.theta
             << std::endl;
@@ -1218,8 +1209,9 @@ void Solver::computeAndDrawRandomPath(sf::RenderWindow &window) {
     std::cout << "Error in validity check!" << std::endl;
   }
 
-  std::vector<char> motionTypesVector(motionTypes, motionTypes + 5);
-  plotter.draw(window, to, path, motionTypesVector);
+  const std::vector<char> motionTypesVector(result.motion_types.begin(),
+                                             result.motion_types.end());
+  plotter.draw(window, to, result.path, motionTypesVector);
 }
 
 /*****************************************************************************/

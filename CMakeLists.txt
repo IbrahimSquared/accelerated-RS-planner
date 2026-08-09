@@ -23,6 +23,7 @@ find_package(ompl)
 target_link_libraries(acceleratedRSPlanner PRIVATE ompl)
 find_package(SFML 2.5 COMPONENTS graphics REQUIRED)
 target_link_libraries(acceleratedRSPlanner PRIVATE sfml-graphics)
+find_package(Threads REQUIRED)
 
 include(CTest)
 if(BUILD_TESTING)
@@ -144,6 +145,28 @@ if(BUILD_TESTING)
     add_test(NAME reconstruction_idempotence COMMAND reconstructionTest)
     set_tests_properties(
         reconstruction_idempotence
+        PROPERTIES WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
+    )
+
+    add_executable(
+        publicApiTest
+        tests/PublicApiTest.cpp
+        src/ConfigParser.cpp
+        src/HelperFunctions.cpp
+        src/Solver.cpp
+        src/DesaulniersAlgorithm.cpp
+        src/Plotter.cpp
+    )
+    target_link_libraries(
+        publicApiTest PRIVATE ompl sfml-graphics Threads::Threads
+    )
+    set_target_properties(
+        publicApiTest
+        PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    add_test(NAME public_api COMMAND publicApiTest)
+    set_tests_properties(
+        public_api
         PROPERTIES WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
 endif()

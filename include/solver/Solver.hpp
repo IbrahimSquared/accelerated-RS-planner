@@ -5,6 +5,7 @@
 #include "helper/Plotter.hpp"
 #include "parser/ConfigParser.hpp"
 #include <SFML/Graphics.hpp>
+#include <array>
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
@@ -13,9 +14,22 @@ namespace accelerated {
 
 class SolverTestAccess;
 
+struct SolveResult {
+  double distance = 0.0;
+  int condition = 0;
+  int quadrant = 0;
+  std::array<char, 5> motion_types = {'N', 'N', 'N', 'N', 'N'};
+  std::array<double, 5> motion_lengths = {};
+  std::vector<State> path;
+};
+
 class Solver {
 public:
   Solver() = default;
+
+  // Thread-safe structured query API. Segment lengths are normalized by the
+  // turning radius, matching the analytic Reeds-Shepp representation.
+  static SolveResult solve(const State &from, const State &to, double r = 1.0);
 
   /*!
    * @brief
@@ -29,7 +43,8 @@ public:
   void characterizeVariability(std::size_t number_of_final_states = 0,
                                std::uint32_t seed = 0x5eed5eedU);
   // Evaluate a single query
-  void evaluateQuery(const State &from, const State &to, const double r = 1);
+  void evaluateQuery(const State &from, const State &to,
+                     double r = 1.0) const;
 
 private:
   friend class SolverTestAccess;
