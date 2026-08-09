@@ -102,4 +102,28 @@ if(BUILD_TESTING)
         analytic_domains
         PROPERTIES WORKING_DIRECTORY ${PROJECT_SOURCE_DIR}
     )
+
+    add_executable(
+        variabilityCharacterizationTest
+        tests/VariabilityCharacterizationTest.cpp
+        src/ConfigParser.cpp
+        src/HelperFunctions.cpp
+        src/Solver.cpp
+        src/DesaulniersAlgorithm.cpp
+        src/Plotter.cpp
+    )
+    target_link_libraries(variabilityCharacterizationTest PRIVATE ompl sfml-graphics)
+    target_compile_definitions(
+        variabilityCharacterizationTest
+        PRIVATE PROJECT_SOURCE_DIR="${PROJECT_SOURCE_DIR}"
+    )
+    set_target_properties(
+        variabilityCharacterizationTest
+        PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
+    add_test(NAME variability_characterization COMMAND variabilityCharacterizationTest)
+    set_tests_properties(
+        variability_characterization
+        PROPERTIES WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    )
 endif()

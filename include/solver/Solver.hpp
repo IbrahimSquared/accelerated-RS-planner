@@ -6,6 +6,8 @@
 #include "parser/ConfigParser.hpp"
 #include <SFML/Graphics.hpp>
 #include <cmath>
+#include <cstddef>
+#include <cstdint>
 
 namespace accelerated {
 
@@ -24,7 +26,8 @@ public:
   // Press enter to solve and draw a random path
   void drawRandomPath();
   // Characterizes variability in speedup between types/conditions
-  void characterizeVariability();
+  void characterizeVariability(std::size_t number_of_final_states = 0,
+                               std::uint32_t seed = 0x5eed5eedU);
   // Evaluate a single query
   void evaluateQuery(const State &from, const State &to, const double r = 1);
 

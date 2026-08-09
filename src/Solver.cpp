@@ -1584,105 +1584,117 @@ void Solver::validateQuery(const State &from, const State &to,
 /*****************************************************************************/
 /*****************************************************************************/
 /*****************************************************************************/
-void Solver::characterizeVariability() {
-  const int number_of_final_states = 100000000;
+void Solver::characterizeVariability(std::size_t number_of_final_states,
+                                     const std::uint32_t seed) {
+  if (number_of_final_states == 0) {
+    if (config_.number_of_final_states <= 0) {
+      throw std::invalid_argument(
+          "Variability characterization requires at least one state");
+    }
+    number_of_final_states = config_.number_of_final_states;
+  }
+
+  const double r = config_.r;
   std::vector<State> toStates;
   const bool use_config = true;
   helper_functions_.generateRandomStates(toStates, number_of_final_states,
-                                          use_config);
+                                          use_config, r, seed);
 
   std::vector<std::vector<State>> stateCategory(20);
   const State from = {0, 0, 0};
 
-  const double r = 400;
-  // Catergorize the final states into 20 categories
+  // Categorize the exact states that will subsequently be timed.
   double d_accelerated = 0;
-  State to;
   int Q, condition;
-  for (int i = 0; i < number_of_final_states; ++i) {
-    to.x = toStates[i].x;
-    to.y = toStates[i].y;
-    to.theta = toStates[i].theta - pi / 2;
+  for (const State &to : toStates) {
     acceleratedRSPlanner(from, to, d_accelerated, r, condition, Q);
-    stateCategory[condition - 1].push_back(toStates[i]);
+    if (condition < 1 || condition > 20) {
+      throw std::runtime_error("Planner returned an invalid path category");
+    }
+    stateCategory[condition - 1].push_back(to);
   }
+  toStates.clear();
+  toStates.shrink_to_fit();
 
   // Display number of states in each category
-  for (int i = 0; i < 20; ++i) {
+  for (std::size_t i = 0; i < stateCategory.size(); ++i) {
     std::cout << "Category " << i + 1 << " has " << stateCategory[i].size()
               << " states" << std::endl;
   }
   std::cout << std::endl;
 
-  // For each category, compute the time by proposed and OMPL then compare
-  std::vector<double> distances_acceleratedRS(number_of_final_states);
-  std::vector<double> distances_OMPL(number_of_final_states);
-
-  std::vector<double> time_accelerated(20);
+  std::vector<double> time_accelerated(stateCategory.size(), 0.0);
+  std::vector<double> time_OMPL(stateCategory.size(), 0.0);
+  std::vector<double> speedup(stateCategory.size(), 0.0);
 
   ob::StateSpacePtr space(std::make_shared<ob::ReedsSheppStateSpace>(r));
   ob::ScopedState<> fromOMPL(space), toOMPL(space);
   fromOMPL[0] = from.x;
   fromOMPL[1] = from.y;
   fromOMPL[2] = from.theta;
-  double d_OMPL = 0;
 
-  std::vector<double> time_OMPL(20);
-  for (int i = 0; i < 20; ++i) {
+  double total_time_accelerated = 0.0;
+  double total_time_OMPL = 0.0;
+  for (std::size_t i = 0; i < stateCategory.size(); ++i) {
+    const std::vector<State> &category = stateCategory[i];
+    if (category.empty()) {
+      std::cout << "Category " << i + 1
+                << " has no samples; timing and error statistics skipped"
+                << std::endl;
+      continue;
+    }
 
-    auto start_accelerated = std::chrono::high_resolution_clock::now();
-    for (size_t j = 0; j < stateCategory[i].size(); ++j) {
-      to.x = stateCategory[i][j].x;
-      to.y = stateCategory[i][j].y;
-      to.theta = stateCategory[i][j].theta;
-      acceleratedRSPlanner(from, to, d_accelerated, r, condition, Q);
+    std::vector<double> distances_acceleratedRS(category.size());
+    std::vector<double> distances_OMPL(category.size());
+
+    const auto start_accelerated = std::chrono::steady_clock::now();
+    for (std::size_t j = 0; j < category.size(); ++j) {
+      acceleratedRSPlanner(from, category[j], d_accelerated, r, condition, Q);
       distances_acceleratedRS[j] = d_accelerated;
     }
-    auto end_accelerated = std::chrono::high_resolution_clock::now();
-    auto duration_accelerated =
-        durationInMicroseconds(start_accelerated, end_accelerated);
-    time_accelerated[i] = duration_accelerated;
+    const auto end_accelerated = std::chrono::steady_clock::now();
+    time_accelerated[i] =
+        std::chrono::duration<double, std::micro>(end_accelerated -
+                                                  start_accelerated)
+            .count();
 
-    auto start_OMPL = std::chrono::high_resolution_clock::now();
-    for (size_t j = 0; j < stateCategory[i].size(); ++j) {
-      toOMPL[0] = stateCategory[i][j].x;
-      toOMPL[1] = stateCategory[i][j].y;
-      toOMPL[2] = stateCategory[i][j].theta;
-      d_OMPL = space->distance(fromOMPL(), toOMPL());
-      distances_OMPL[j] = d_OMPL;
+    const auto start_OMPL = std::chrono::steady_clock::now();
+    for (std::size_t j = 0; j < category.size(); ++j) {
+      toOMPL[0] = category[j].x;
+      toOMPL[1] = category[j].y;
+      toOMPL[2] = category[j].theta;
+      distances_OMPL[j] = space->distance(fromOMPL(), toOMPL());
     }
-    auto end_OMPL = std::chrono::high_resolution_clock::now();
-    auto duration_OMPL = durationInMicroseconds(start_OMPL, end_OMPL);
-    time_OMPL[i] = duration_OMPL;
+    const auto end_OMPL = std::chrono::steady_clock::now();
+    time_OMPL[i] =
+        std::chrono::duration<double, std::micro>(end_OMPL - start_OMPL)
+            .count();
 
-    // display error stats for each category
+    speedup[i] = time_OMPL[i] / time_accelerated[i];
+    total_time_accelerated += time_accelerated[i];
+    total_time_OMPL += time_OMPL[i];
+
     std::cout << "Distance error for category " << i + 1 << std::endl;
     helper_functions_.errorStats(distances_acceleratedRS, distances_OMPL);
   }
 
-  // Display the time speedup for each category
-  for (int i = 0; i < 20; ++i) {
-    std::cout << "Category " << i + 1 << " has a time speedup of "
-              << time_OMPL[i] / time_accelerated[i] << std::endl;
+  for (std::size_t i = 0; i < stateCategory.size(); ++i) {
+    if (!stateCategory[i].empty()) {
+      std::cout << "Category " << i + 1 << " has a time speedup of "
+                << speedup[i] << std::endl;
+    }
   }
 
-  // Save the number of states in each category, the time for each category for
-  // each method and the speedup
-  std::ofstream file;
-  file.open("variability.txt");
-  for (int i = 0; i < 20; ++i) {
+  std::ofstream file("variability.txt", std::ios::trunc);
+  if (!file) {
+    throw std::runtime_error("Failed to open variability.txt for writing");
+  }
+  for (std::size_t i = 0; i < stateCategory.size(); ++i) {
     file << stateCategory[i].size() << " " << time_accelerated[i] << " "
-         << time_OMPL[i] << " " << time_OMPL[i] / time_accelerated[i] << "\n";
+         << time_OMPL[i] << " " << speedup[i] << "\n";
   }
 
-  // weighted speedup factor
-  double total_time_accelerated = 0;
-  double total_time_OMPL = 0;
-  for (int i = 0; i < 20; ++i) {
-    total_time_accelerated += time_accelerated[i] * stateCategory[i].size();
-    total_time_OMPL += time_OMPL[i] * stateCategory[i].size();
-  }
-  double weighted_speedup = total_time_OMPL / total_time_accelerated;
+  const double weighted_speedup = total_time_OMPL / total_time_accelerated;
   std::cout << "Weighted speedup: " << weighted_speedup << std::endl;
 }
 
